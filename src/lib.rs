@@ -7,7 +7,7 @@ mod patch;
 mod tests {
     use crate::{
         cpal::Cpal,
-        generator::{Generator, SineGenerator},
+        generator::{Generator, SineGenerator, TriangleGenerator},
         patch::{MasterPatch, Patch, SampleTiming},
     };
 
@@ -16,7 +16,7 @@ mod tests {
         #[derive(Default, Clone)]
         struct MyPatch {
             time_offset: f32,
-            sine_synth: SineGenerator,
+            sine_synth: TriangleGenerator,
             sine_cv: SineGenerator,
         }
 
