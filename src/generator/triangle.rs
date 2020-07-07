@@ -22,10 +22,9 @@ impl Default for TriangleGenerator {
 
 impl Generator for TriangleGenerator {
     fn generate(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+        let sample_clock = self.sample_clock_from_frequency(&sample_timing, self.frequency);
         vec![
-            ((((sample_timing.sample_clock * self.frequency * 4.0) / sample_timing.sample_rate)
-                % 4.0)
-                - 2.0)
+            ((((sample_clock * self.frequency * 4.0) / sample_timing.sample_rate) % 4.0) - 2.0)
                 .abs()
                 - 1.0,
         ]

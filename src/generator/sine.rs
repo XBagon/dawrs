@@ -22,7 +22,8 @@ impl Default for SineGenerator {
 
 impl Generator for SineGenerator {
     fn generate(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
-        vec![(sample_timing.sample_clock * self.frequency * 2.0 * std::f32::consts::PI
+        let sample_clock = self.sample_clock_from_frequency(&sample_timing, self.frequency);
+        vec![(sample_clock * self.frequency * 2.0 * std::f32::consts::PI
             / sample_timing.sample_rate)
             .sin()]
     }

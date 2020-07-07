@@ -8,7 +8,6 @@ pub trait Patch: Send {
 #[derive(Clone)]
 pub struct SampleTiming {
     pub sample_rate: f32,
-    pub sample_clock: f32,
     pub clock: usize,
 }
 
@@ -16,7 +15,6 @@ impl Default for SampleTiming {
     fn default() -> Self {
         Self {
             sample_rate: 44_000.0,
-            sample_clock: 0.0,
             clock: 0,
         }
     }
@@ -25,7 +23,6 @@ impl Default for SampleTiming {
 impl SampleTiming {
     pub fn tick(&mut self) {
         self.clock += 1;
-        self.sample_clock = (self.sample_clock + 1.0) % self.sample_rate;
     }
 }
 

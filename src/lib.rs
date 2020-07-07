@@ -16,7 +16,10 @@ mod tests {
         #[derive(Default, Clone)]
         struct MyPatch {
             time_offset: f32,
-            sine_synth: TriangleGenerator,
+            original_frequency: f32,
+            target_frequency: f32,
+            glide_length: usize,
+            triangle_synth: TriangleGenerator,
             sine_cv: SineGenerator,
         }
 
@@ -27,21 +30,35 @@ mod tests {
                 let offset = (sample_timing.sample_rate * self.time_offset) as usize;
 
                 let clock = sample_timing.clock + offset;
+
                 if clock % bar == 0 {
                     if clock != 0 {
                         if clock % (bar * 6) == 0 {
-                            self.sine_synth.frequency *= 0.3;
+                            self.original_frequency = self.triangle_synth.frequency;
+                            self.target_frequency = self.original_frequency / 3.0;
+                            self.glide_length = 24000;
                         } else {
-                            self.sine_synth.frequency *= 1.2;
+                            self.original_frequency = self.triangle_synth.frequency;
+                            self.target_frequency = self.original_frequency * 1.2;
+                            self.glide_length = 24000;
                         }
-                        dbg!(self.sine_synth.frequency);
                     }
                 }
 
-                let lead = self.sine_synth.generate(&sample_timing);
-                let cv = self.sine_cv.generate(&sample_timing);
-                //cv controls volume of the lead
-                lead.into_iter().zip(cv).map(|(lead, cv)| lead * cv * 0.1).collect()
+                if self.glide_length > 0 {
+                    self.triangle_synth.frequency = self.original_frequency + (1.0 - (self.glide_length as f32/24000.0)) * (self.target_frequency -  self.original_frequency);
+                    self.glide_length -= 1;
+                }
+
+                let mut lead = self.triangle_synth.generate(&sample_timing)[0];
+                //turn volume down
+                lead *= 0.1;
+
+                //cv map from [-1,1] to [0,1]
+                let cv = (self.sine_cv.generate(&sample_timing)[0] + 1.0)/2.0;
+
+                //cv pans lead
+                vec![lead * cv, lead * (1.0-cv)]
             }
         }
 
@@ -50,18 +67,18 @@ mod tests {
         let mut master_patch = MasterPatch::default();
 
         let patch = MyPatch {
-            sine_cv: SineGenerator::new(1.0),
+            sine_cv: SineGenerator::new(0.3),
             ..MyPatch::default()
         };
 
         let mut patch2 = patch.clone();
         //second synth starts on B instead of A
-        patch2.sine_synth.frequency = 493.88;
+        patch2.triangle_synth.frequency = 493.88;
         //offset of 1 second
         patch2.time_offset = 1.0;
 
         master_patch.add_patch(patch);
-        master_patch.add_patch(patch2);
+        //master_patch.add_patch(patch2);
 
         master_patch.play(&mut cpal, SampleTiming::default());
     }
