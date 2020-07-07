@@ -46,7 +46,9 @@ mod tests {
                 }
 
                 if self.glide_length > 0 {
-                    self.triangle_synth.frequency = self.original_frequency + (1.0 - (self.glide_length as f32/24000.0)) * (self.target_frequency -  self.original_frequency);
+                    self.triangle_synth.frequency = self.original_frequency
+                        + (1.0 - (self.glide_length as f32 / 24000.0))
+                            * (self.target_frequency - self.original_frequency);
                     self.glide_length -= 1;
                 }
 
@@ -55,10 +57,10 @@ mod tests {
                 lead *= 0.1;
 
                 //cv map from [-1,1] to [0,1]
-                let cv = (self.sine_cv.generate(&sample_timing)[0] + 1.0)/2.0;
+                let cv = (self.sine_cv.generate(&sample_timing)[0] + 1.0) / 2.0;
 
                 //cv pans lead
-                vec![lead * cv, lead * (1.0-cv)]
+                vec![lead * cv, lead * (1.0 - cv)]
             }
         }
 
