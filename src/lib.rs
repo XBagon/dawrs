@@ -1,18 +1,22 @@
-mod cpal;
-mod effect;
-mod generator;
-mod patch;
+pub mod cpal;
+pub mod effect;
+pub mod generator;
+pub mod patch;
 
 #[cfg(test)]
 mod tests {
     use crate::{
         cpal::Cpal,
-        generator::{Generator, SineGenerator, TriangleGenerator},
+        generator::{AdsrGenerator, Generator, SineGenerator, TriangleGenerator},
         patch::{MasterPatch, Patch, SampleTiming},
     };
 
+    fn midi_id_to_frequency(midi_id: u8) -> f32 {
+        (2 as f32).powf((midi_id - 69) as f32 / 12.0) * 440.0
+    }
+
     #[test]
-    fn test() {
+    fn glide_test() {
         #[derive(Default, Clone)]
         struct MyPatch {
             time_offset: f32,
@@ -81,6 +85,83 @@ mod tests {
 
         master_patch.add_patch(patch);
         //master_patch.add_patch(patch2);
+
+        master_patch.play(&mut cpal, SampleTiming::default());
+    }
+
+    #[test]
+    fn marry_had_a_little_lamb() {
+        #[derive(Default, Clone)]
+        struct MyPatch {
+            triangle_synth: TriangleGenerator,
+            adsr: AdsrGenerator,
+            melody: Vec<u8>,
+            note_lengths: Vec<u8>,
+            melody_index: usize,
+            current_note_quarter_count: u8,
+        }
+
+        impl Patch for MyPatch {
+            fn next_value(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+                //bar of 1.5 seconds
+                let quarter_length = (sample_timing.sample_rate * 0.4) as usize;
+
+                let clock = sample_timing.clock;
+
+                if clock % quarter_length == 0 {
+                    //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;
+                    let note = self.melody[self.melody_index];
+                    let note_length = self.note_lengths[self.melody_index];
+                    if self.current_note_quarter_count == 0 {
+                        self.triangle_synth.frequency = midi_id_to_frequency(note);
+                        self.triangle_synth.start_tick = clock;
+                        let note_length = note_length as f32;
+                        self.adsr = AdsrGenerator::new(
+                            0.05 * note_length,
+                            0.05 * note_length,
+                            0.7,
+                            0.2 * note_length,
+                            0.1 * note_length,
+                        );
+                        self.adsr.start_tick = clock;
+                    }
+                    self.current_note_quarter_count += 1;
+                    if note_length == self.current_note_quarter_count {
+                        self.current_note_quarter_count = 0;
+                        self.melody_index += 1;
+                        if self.melody_index == self.melody.len() {
+                            self.melody_index = 0;
+                        }
+                    }
+                }
+
+                let mut lead = self.triangle_synth.generate(&sample_timing)[0];
+                //turn volume down
+                lead *= 0.1;
+
+                let adsr_value = self.adsr.generate(&sample_timing)[0];
+
+                //ADSR controls volume
+                vec![lead * adsr_value, lead * adsr_value]
+            }
+        }
+
+        let mut cpal = Cpal::new().unwrap();
+
+        let mut master_patch = MasterPatch::default();
+
+        let patch = MyPatch {
+            melody: vec![
+                76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
+                74, 74, 76, 74, 72,
+            ],
+            note_lengths: vec![
+                1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
+            ],
+            ..MyPatch::default()
+        };
+
+        master_patch.add_patch(patch);
 
         master_patch.play(&mut cpal, SampleTiming::default());
     }
