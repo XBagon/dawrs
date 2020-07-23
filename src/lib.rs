@@ -103,12 +103,13 @@ mod tests {
 
         impl Patch for MyPatch {
             fn next_value(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
-                //bar of 1.5 seconds
-                let quarter_length = (sample_timing.sample_rate * 0.4) as usize;
+                //quarter notes of 0.4 seconds
+                let quarter_duration = 0.4;
+                let quarter_sample_count = (sample_timing.sample_rate * quarter_duration) as usize;
 
                 let clock = sample_timing.clock;
 
-                if clock % quarter_length == 0 {
+                if clock % quarter_sample_count == 0 {
                     //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;
                     let note = self.melody[self.melody_index];
                     let note_length = self.note_lengths[self.melody_index];
@@ -116,13 +117,7 @@ mod tests {
                         self.triangle_synth.frequency = midi_id_to_frequency(note);
                         self.triangle_synth.start_tick = clock;
                         let note_length = note_length as f32;
-                        self.adsr = AdsrGenerator::new(
-                            0.05 * note_length,
-                            0.05 * note_length,
-                            0.7,
-                            0.2 * note_length,
-                            0.1 * note_length,
-                        );
+                        self.adsr.sustain = quarter_duration * note_length - 0.2; //0.2s are a+d+r
                         self.adsr.start_tick = clock;
                     }
                     self.current_note_quarter_count += 1;
@@ -151,6 +146,7 @@ mod tests {
         let mut master_patch = MasterPatch::default();
 
         let patch = MyPatch {
+            adsr: AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
             melody: vec![
                 76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
                 74, 74, 76, 74, 72,
