@@ -24,7 +24,7 @@ impl Effect for Delay {
         let buffer_size = sample_timing.duration_to_sample_count(self.delay);
         if self.buffer.len() == buffer_size {
             for (sample_value, buffered_sample_value) in
-            sample.iter_mut().zip(self.buffer[0].iter())
+                sample.iter_mut().zip(self.buffer[0].iter())
             {
                 *sample_value += buffered_sample_value * self.feedback
             }

@@ -14,7 +14,7 @@ pub mod prelude {
 #[cfg(test)]
 mod tests {
     use crate::{
-        effect::{Delay, Effect},
+        effect::{Delay, Effect, Oscilloscope},
         generator::{AdsrGenerator, Generator, SineGenerator, TriangleGenerator},
         prelude::*,
     };
@@ -24,7 +24,7 @@ mod tests {
     }
 
     #[test]
-    fn glide_test() {
+    fn glide() {
         #[derive(Default, Clone)]
         struct MyPatch {
             time_offset: f32,
@@ -167,6 +167,68 @@ mod tests {
                 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
             ],
             ..MyPatch::default()
+        };
+
+        master_patch.add_patch(patch);
+
+        master_patch.play(&mut cpal, SampleTiming::default());
+    }
+
+    #[test]
+    fn plot() {
+        struct MyPatch {
+            sine_gen: SineGenerator,
+            sine_oscope: Oscilloscope,
+            adsr_gen: AdsrGenerator,
+            adsr_oscope: Oscilloscope,
+            triangle_gen: TriangleGenerator,
+            triangle_oscope: Oscilloscope,
+        }
+
+        const FREQ: f32 = 440.0;
+        const DURATION: f32 = 1.0 / FREQ;
+
+        impl Patch for MyPatch {
+            fn next_value(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+                let mut sine = self.sine_gen.generate(&sample_timing);
+                sine = self.sine_oscope.process(&sample_timing, sine);
+
+                let mut triangle = self.triangle_gen.generate(&sample_timing);
+                triangle = self.triangle_oscope.process(&sample_timing, triangle);
+
+                let sample_count = sample_timing.duration_to_sample_count(DURATION);
+
+                if sample_timing.clock == sample_count - 1 {
+                    self.sine_oscope.plot("sine.png").unwrap();
+                    self.triangle_oscope.plot("triangle.png").unwrap();
+                }
+
+                let mut adsr = self.adsr_gen.generate(&sample_timing);
+                adsr = self.adsr_oscope.process(&sample_timing, adsr);
+
+                let sample_count = sample_timing.duration_to_sample_count(0.05 + 0.05 + 0.2 + 0.1);
+
+                if sample_timing.clock == sample_count - 1 {
+                    self.adsr_oscope.plot("adsr.png").unwrap();
+                    std::process::exit(0);
+                }
+
+                let sample_value = sine[0] * triangle[0] * adsr[0] * 0.1;
+                vec![sample_value; 2]
+            }
+        }
+
+        let mut cpal = Cpal::new().unwrap();
+
+        let mut master_patch = MasterPatch::default();
+
+        let patch = MyPatch {
+            sine_gen: SineGenerator::new(FREQ),
+            sine_oscope: Oscilloscope::new(DURATION, DURATION / 1000.0, 0, 512, 1000.0),
+            triangle_gen: TriangleGenerator::new(FREQ),
+            triangle_oscope: Oscilloscope::new(DURATION, DURATION / 1000.0, 0, 512, 1000.0),
+            adsr_gen: AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
+            adsr_oscope: Oscilloscope::new(0.05 + 0.05 + 0.2 + 0.1, 0.01, 0, 512, 1.0),
         };
 
         master_patch.add_patch(patch);
