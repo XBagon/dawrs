@@ -1,5 +1,5 @@
 use super::Generator;
-use crate::patch::SampleTiming;
+use crate::SampleTiming;
 
 #[derive(Clone)]
 pub struct AdsrGenerator {

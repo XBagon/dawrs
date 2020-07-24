@@ -2,13 +2,21 @@ pub mod cpal;
 pub mod effect;
 pub mod generator;
 pub mod patch;
+pub mod sample_timing;
+
+pub use crate::cpal::Cpal;
+pub use sample_timing::SampleTiming;
+
+pub mod prelude {
+    pub use crate::{patch::*, Cpal, SampleTiming};
+}
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        cpal::Cpal,
+        effect::{Delay, Effect},
         generator::{AdsrGenerator, Generator, SineGenerator, TriangleGenerator},
-        patch::{MasterPatch, Patch, SampleTiming},
+        prelude::*,
     };
 
     fn midi_id_to_frequency(midi_id: u8) -> f32 {
@@ -95,6 +103,7 @@ mod tests {
         struct MyPatch {
             triangle_synth: TriangleGenerator,
             adsr: AdsrGenerator,
+            delay: Delay,
             melody: Vec<u8>,
             note_lengths: Vec<u8>,
             melody_index: usize,
@@ -137,7 +146,9 @@ mod tests {
                 let adsr_value = self.adsr.generate(&sample_timing)[0];
 
                 //ADSR controls volume
-                vec![lead * adsr_value, lead * adsr_value]
+                let sample = vec![lead * adsr_value, lead * adsr_value];
+
+                self.delay.process(&sample_timing, sample)
             }
         }
 
@@ -147,6 +158,7 @@ mod tests {
 
         let patch = MyPatch {
             adsr: AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
+            delay: Delay::new(0.3, 0.5),
             melody: vec![
                 76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
                 74, 74, 76, 74, 72,
