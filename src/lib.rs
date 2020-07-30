@@ -70,11 +70,14 @@ mod tests {
                 //turn volume down
                 lead *= 0.1;
 
+                let mut cv = self.sine_cv.generate(&sample_timing);
                 //cv map from [-1,1] to [0,1]
-                let cv = (self.sine_cv.generate(&sample_timing)[0] + 1.0) / 2.0;
+                cv.linear_map(-1.0..1.0, 0.0..1.0);
+                let second_channel = 1.0-cv[0];
+                cv.push(second_channel);
 
                 //cv pans lead
-                PolySample(vec![lead * cv, lead * (1.0 - cv)])
+                lead * cv
             }
         }
 
@@ -141,14 +144,14 @@ mod tests {
                     }
                 }
 
-                let mut lead = self.triangle_synth.generate(&sample_timing);
+                let mut poly_sample = self.triangle_synth.generate(&sample_timing);
                 //turn volume down
-                lead *= 0.1;
+                poly_sample *= 0.1;
 
-                let adsr_value = self.adsr.generate(&sample_timing)[0];
+                let adsr_value = self.adsr.generate(&sample_timing);
 
                 //ADSR controls volume
-                let mut poly_sample = lead * adsr_value;
+                poly_sample.apply(&adsr_value);
                 //make stereo
                 poly_sample.polify(2);
 

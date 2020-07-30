@@ -1,21 +1,10 @@
-use std::ops::{Index, IndexMut, AddAssign, Add, Mul, MulAssign};
+use std::ops::{AddAssign, Add, Mul, MulAssign, Range};
+use shrinkwraprs::Shrinkwrap;
 
-#[derive(Clone)]
+#[derive(Clone, Shrinkwrap)]
+#[shrinkwrap(mutable)]
 pub struct PolySample(pub Vec<f32>);
 
-impl Index<usize> for PolySample {
-    type Output = f32;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.0[index]
-    }
-}
-
-impl IndexMut<usize> for PolySample {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.0[index]
-    }
-}
 
 impl Add<PolySample> for PolySample {
     type Output = PolySample;
@@ -49,6 +38,14 @@ impl Mul<f32> for &PolySample {
     }
 }
 
+impl Mul<PolySample> for f32 {
+    type Output = PolySample;
+
+    fn mul(self, rhs: PolySample) -> Self::Output {
+        rhs * self
+    }
+}
+
 impl Mul<&PolySample> for f32 {
     type Output = PolySample;
 
@@ -77,5 +74,11 @@ impl PolySample {
     /// Clones all channels `n` times and concatenates them.
     pub fn polify(&mut self, n: usize) {
         self.0 = self.0.repeat(n);
+    }
+
+    pub fn linear_map(&mut self, from: Range<f32>, to: Range<f32>) {
+        for sample in &mut self.0 {
+            *sample = (*sample + (from.start - to.start)) * ((to.end - to.start) / (from.end - from.start))
+        }
     }
 }
