@@ -5,8 +5,8 @@ pub use adsr::AdsrGenerator;
 pub use sine::SineGenerator;
 pub use triangle::TriangleGenerator;
 
-use crate::SampleTiming;
+use crate::{SampleTiming, PolySample};
 
 pub trait Generator {
-    fn generate(&mut self, sample_timing: &SampleTiming) -> Vec<f32>;
+    fn generate(&mut self, sample_timing: &SampleTiming) -> PolySample;
 }

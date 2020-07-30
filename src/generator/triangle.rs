@@ -1,5 +1,5 @@
 use super::Generator;
-use crate::SampleTiming;
+use crate::{SampleTiming, PolySample};
 
 #[derive(Clone)]
 pub struct TriangleGenerator {
@@ -23,9 +23,9 @@ impl Default for TriangleGenerator {
 }
 
 impl Generator for TriangleGenerator {
-    fn generate(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+    fn generate(&mut self, sample_timing: &SampleTiming) -> PolySample {
         let sample_clock =
             sample_timing.sample_clock_with_frequency(self.frequency, self.start_tick);
-        vec![(((sample_clock * self.frequency * 4.0) % 4.0) - 2.0).abs() - 1.0]
+        PolySample(vec![(((sample_clock * self.frequency * 4.0) % 4.0) - 2.0).abs() - 1.0])
     }
 }

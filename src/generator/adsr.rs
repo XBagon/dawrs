@@ -1,5 +1,5 @@
 use super::Generator;
-use crate::SampleTiming;
+use crate::{SampleTiming, PolySample};
 
 #[derive(Clone)]
 pub struct AdsrGenerator {
@@ -31,7 +31,7 @@ impl Default for AdsrGenerator {
 }
 
 impl Generator for AdsrGenerator {
-    fn generate(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+    fn generate(&mut self, sample_timing: &SampleTiming) -> PolySample {
         let mut sample_clock = sample_timing.sample_clock(self.start_tick);
 
         let value = if sample_clock < self.attack {
@@ -54,6 +54,6 @@ impl Generator for AdsrGenerator {
                 }
             }
         };
-        vec![value]
+        PolySample(vec![value])
     }
 }

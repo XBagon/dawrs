@@ -1,14 +1,16 @@
-pub mod cpal;
+mod cpal;
 pub mod effect;
 pub mod generator;
 pub mod patch;
-pub mod sample_timing;
+mod sample_timing;
+mod poly_sample;
 
 pub use crate::cpal::Cpal;
 pub use sample_timing::SampleTiming;
+pub use poly_sample::PolySample;
 
 pub mod prelude {
-    pub use crate::{patch::*, Cpal, SampleTiming};
+    pub use crate::{patch::*, Cpal, SampleTiming, PolySample};
 }
 
 #[cfg(test)]
@@ -36,7 +38,7 @@ mod tests {
         }
 
         impl Patch for MyPatch {
-            fn next_value(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+            fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
                 //bar of 1.5 seconds
                 let bar = (sample_timing.sample_rate * 1.5) as usize;
                 let offset = (sample_timing.sample_rate * self.time_offset) as usize;
@@ -68,11 +70,14 @@ mod tests {
                 //turn volume down
                 lead *= 0.1;
 
+                let mut cv = self.sine_cv.generate(&sample_timing);
                 //cv map from [-1,1] to [0,1]
-                let cv = (self.sine_cv.generate(&sample_timing)[0] + 1.0) / 2.0;
+                cv.linear_map(-1.0..1.0, 0.0..1.0);
+                let second_channel = 1.0-cv[0];
+                cv.push(second_channel);
 
                 //cv pans lead
-                vec![lead * cv, lead * (1.0 - cv)]
+                lead * cv
             }
         }
 
@@ -111,7 +116,7 @@ mod tests {
         }
 
         impl Patch for MyPatch {
-            fn next_value(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+            fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
                 //quarter notes of 0.4 seconds
                 let quarter_duration = 0.4;
                 let quarter_sample_count = (sample_timing.sample_rate * quarter_duration) as usize;
@@ -139,16 +144,18 @@ mod tests {
                     }
                 }
 
-                let mut lead = self.triangle_synth.generate(&sample_timing)[0];
+                let mut poly_sample = self.triangle_synth.generate(&sample_timing);
                 //turn volume down
-                lead *= 0.1;
+                poly_sample *= 0.1;
 
-                let adsr_value = self.adsr.generate(&sample_timing)[0];
+                let adsr_value = self.adsr.generate(&sample_timing);
 
                 //ADSR controls volume
-                let sample = vec![lead * adsr_value, lead * adsr_value];
+                poly_sample.apply(&adsr_value);
+                //make stereo
+                poly_sample.polify(2);
 
-                self.delay.process(&sample_timing, sample)
+                self.delay.process(&sample_timing, poly_sample)
             }
         }
 
@@ -189,7 +196,7 @@ mod tests {
         const DURATION: f32 = 1.0 / FREQ;
 
         impl Patch for MyPatch {
-            fn next_value(&mut self, sample_timing: &SampleTiming) -> Vec<f32> {
+            fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
                 let mut sine = self.sine_gen.generate(&sample_timing);
                 sine = self.sine_oscope.process(&sample_timing, sine);
 
@@ -214,7 +221,7 @@ mod tests {
                 }
 
                 let sample_value = sine[0] * triangle[0] * adsr[0] * 0.1;
-                vec![sample_value; 2]
+                PolySample(vec![sample_value; 2])
             }
         }
 

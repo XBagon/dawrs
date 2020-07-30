@@ -1,12 +1,12 @@
 use super::Effect;
-use crate::SampleTiming;
+use crate::{SampleTiming, PolySample};
 use std::collections::VecDeque;
 
 #[derive(Clone, Default)]
 pub struct Delay {
     delay: f32,
     feedback: f32,
-    buffer: VecDeque<Vec<f32>>,
+    buffer: VecDeque<PolySample>,
 }
 
 impl Delay {
@@ -20,17 +20,13 @@ impl Delay {
 }
 
 impl Effect for Delay {
-    fn process(&mut self, sample_timing: &SampleTiming, mut sample: Vec<f32>) -> Vec<f32> {
+    fn process(&mut self, sample_timing: &SampleTiming, mut poly_sample: PolySample) -> PolySample {
         let buffer_size = sample_timing.duration_to_sample_count(self.delay);
         if self.buffer.len() == buffer_size {
-            for (sample_value, buffered_sample_value) in
-                sample.iter_mut().zip(self.buffer[0].iter())
-            {
-                *sample_value += buffered_sample_value * self.feedback
-            }
+            poly_sample += &self.buffer[0] * self.feedback;
             self.buffer.pop_front();
         }
-        self.buffer.push_back(sample.clone());
-        sample
+        self.buffer.push_back(poly_sample.clone());
+        poly_sample
     }
 }
