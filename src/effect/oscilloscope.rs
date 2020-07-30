@@ -1,5 +1,5 @@
 use super::Effect;
-use crate::{SampleTiming, PolySample};
+use crate::{PolySample, SampleTiming};
 use anyhow::anyhow;
 use plotters::prelude::*;
 use std::{collections::VecDeque, path::Path};
@@ -55,7 +55,9 @@ impl Oscilloscope {
         chart.configure_mesh().draw()?;
 
         chart.draw_series(LineSeries::new(
-            self.buffer.iter().map(|(time, poly_sample)| (*time, poly_sample[self.channel as usize])),
+            self.buffer
+                .iter()
+                .map(|(time, poly_sample)| (*time, poly_sample[self.channel as usize])),
             &RED,
         ))?;
 

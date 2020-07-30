@@ -1,10 +1,9 @@
-use std::ops::{AddAssign, Add, Mul, MulAssign, Range};
 use shrinkwraprs::Shrinkwrap;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Range};
 
 #[derive(Clone, Shrinkwrap)]
 #[shrinkwrap(mutable)]
 pub struct PolySample(pub Vec<f32>);
-
 
 impl Add<PolySample> for PolySample {
     type Output = PolySample;
@@ -16,8 +15,8 @@ impl Add<PolySample> for PolySample {
 
 impl AddAssign<PolySample> for PolySample {
     fn add_assign(&mut self, rhs: PolySample) {
-        for (l,r) in self.0.iter_mut().zip(rhs.0.iter()) {
-            *l+=r;
+        for (l, r) in self.0.iter_mut().zip(rhs.0.iter()) {
+            *l += r;
         }
     }
 }
@@ -57,7 +56,7 @@ impl Mul<&PolySample> for f32 {
 impl MulAssign<f32> for PolySample {
     fn mul_assign(&mut self, rhs: f32) {
         for l in &mut self.0 {
-            *l*=rhs;
+            *l *= rhs;
         }
     }
 }
@@ -78,7 +77,8 @@ impl PolySample {
 
     pub fn linear_map(&mut self, from: Range<f32>, to: Range<f32>) {
         for sample in &mut self.0 {
-            *sample = (*sample + (from.start - to.start)) * ((to.end - to.start) / (from.end - from.start))
+            *sample = (*sample + (from.start - to.start))
+                * ((to.end - to.start) / (from.end - from.start))
         }
     }
 }
