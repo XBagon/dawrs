@@ -1,5 +1,5 @@
 use super::Effect;
-use crate::SampleTiming;
+use crate::{SampleTiming, PolySample};
 use anyhow::anyhow;
 use plotters::prelude::*;
 use std::{collections::VecDeque, path::Path};
@@ -12,7 +12,7 @@ pub struct Oscilloscope {
     channel: u8,
     height: u32,
     aspect_ratio: f32,
-    buffer: VecDeque<(f32, Vec<f32>)>,
+    buffer: VecDeque<(f32, PolySample)>,
 }
 
 impl Oscilloscope {
@@ -55,7 +55,7 @@ impl Oscilloscope {
         chart.configure_mesh().draw()?;
 
         chart.draw_series(LineSeries::new(
-            self.buffer.iter().map(|(time, sample)| (*time, sample[self.channel as usize])),
+            self.buffer.iter().map(|(time, poly_sample)| (*time, poly_sample[self.channel as usize])),
             &RED,
         ))?;
 
@@ -64,7 +64,7 @@ impl Oscilloscope {
 }
 
 impl Effect for Oscilloscope {
-    fn process(&mut self, sample_timing: &SampleTiming, sample: Vec<f32>) -> Vec<f32> {
+    fn process(&mut self, sample_timing: &SampleTiming, poly_sample: PolySample) -> PolySample {
         let buffer_size = sample_timing.duration_to_sample_count(self.buffer_duration);
         let accuracy_sample_count =
             sample_timing.duration_to_sample_count(self.sample_interval).max(1);
@@ -72,9 +72,9 @@ impl Effect for Oscilloscope {
             if self.buffer.len() == buffer_size {
                 self.buffer.pop_front();
             }
-            self.buffer.push_back((sample_timing.sample_clock(0), sample.clone()));
+            self.buffer.push_back((sample_timing.sample_clock(0), poly_sample.clone()));
         }
         self.last_sample_counter += 1;
-        sample
+        poly_sample
     }
 }
