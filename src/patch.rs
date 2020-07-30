@@ -1,4 +1,4 @@
-use crate::{cpal::Cpal, SampleTiming, PolySample};
+use crate::{cpal::Cpal, PolySample, SampleTiming};
 use cpal::traits::EventLoopTrait;
 
 pub trait Patch: Send {
@@ -40,8 +40,11 @@ impl MasterPatch {
                     buffer: cpal::UnknownTypeOutputBuffer::U16(mut buffer),
                 } => {
                     for sample in buffer.chunks_mut(format.channels as usize) {
-                        let mut next_samples =
-                            self.next_sample(sample_timing_ref).0.into_iter().chain(std::iter::repeat(0.0));
+                        let mut next_samples = self
+                            .next_sample(sample_timing_ref)
+                            .0
+                            .into_iter()
+                            .chain(std::iter::repeat(0.0));
                         for out in sample.iter_mut() {
                             *out = ((next_samples.next().unwrap() * 0.5 + 0.5)
                                 * std::u16::MAX as f32) as u16;
@@ -53,11 +56,13 @@ impl MasterPatch {
                     buffer: cpal::UnknownTypeOutputBuffer::I16(mut buffer),
                 } => {
                     for sample in buffer.chunks_mut(format.channels as usize) {
-                        let mut next_samples =
-                            self.next_sample(sample_timing_ref).0.into_iter().chain(std::iter::repeat(0.0));
+                        let mut next_samples = self
+                            .next_sample(sample_timing_ref)
+                            .0
+                            .into_iter()
+                            .chain(std::iter::repeat(0.0));
                         for out in sample.iter_mut() {
-                            *out =
-                                (next_samples.next().unwrap() * std::i16::MAX as f32) as i16;
+                            *out = (next_samples.next().unwrap() * std::i16::MAX as f32) as i16;
                         }
                         sample_timing_ref.tick();
                     }
@@ -66,8 +71,11 @@ impl MasterPatch {
                     buffer: cpal::UnknownTypeOutputBuffer::F32(mut buffer),
                 } => {
                     for sample in buffer.chunks_mut(format.channels as usize) {
-                        let mut next_samples =
-                            self.next_sample(sample_timing_ref).0.into_iter().chain(std::iter::repeat(0.0));
+                        let mut next_samples = self
+                            .next_sample(sample_timing_ref)
+                            .0
+                            .into_iter()
+                            .chain(std::iter::repeat(0.0));
                         for out in sample.iter_mut() {
                             *out = next_samples.next().unwrap();
                         }

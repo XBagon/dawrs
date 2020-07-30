@@ -1,5 +1,5 @@
 use super::Generator;
-use crate::{SampleTiming, PolySample};
+use crate::{PolySample, SampleTiming};
 
 #[derive(Clone)]
 pub struct TriangleGenerator {

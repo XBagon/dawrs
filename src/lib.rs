@@ -2,15 +2,16 @@ mod cpal;
 pub mod effect;
 pub mod generator;
 pub mod patch;
-mod sample_timing;
 mod poly_sample;
+mod sample_timing;
+pub mod synthesizer;
 
 pub use crate::cpal::Cpal;
-pub use sample_timing::SampleTiming;
 pub use poly_sample::PolySample;
+pub use sample_timing::SampleTiming;
 
 pub mod prelude {
-    pub use crate::{patch::*, Cpal, SampleTiming, PolySample};
+    pub use crate::{patch::*, Cpal, PolySample, SampleTiming};
 }
 
 #[cfg(test)]
@@ -19,6 +20,7 @@ mod tests {
         effect::{Delay, Effect, Oscilloscope},
         generator::{AdsrGenerator, Generator, SineGenerator, TriangleGenerator},
         prelude::*,
+        synthesizer::BasicSynthesizer,
     };
 
     fn midi_id_to_frequency(midi_id: u8) -> f32 {
@@ -73,7 +75,7 @@ mod tests {
                 let mut cv = self.sine_cv.generate(&sample_timing);
                 //cv map from [-1,1] to [0,1]
                 cv.linear_map(-1.0..1.0, 0.0..1.0);
-                let second_channel = 1.0-cv[0];
+                let second_channel = 1.0 - cv[0];
                 cv.push(second_channel);
 
                 //cv pans lead
@@ -106,8 +108,7 @@ mod tests {
     fn marry_had_a_little_lamb() {
         #[derive(Default, Clone)]
         struct MyPatch {
-            triangle_synth: TriangleGenerator,
-            adsr: AdsrGenerator,
+            synth: BasicSynthesizer<TriangleGenerator>,
             delay: Delay,
             melody: Vec<u8>,
             note_lengths: Vec<u8>,
@@ -128,11 +129,11 @@ mod tests {
                     let note = self.melody[self.melody_index];
                     let note_length = self.note_lengths[self.melody_index];
                     if self.current_note_quarter_count == 0 {
-                        self.triangle_synth.frequency = midi_id_to_frequency(note);
-                        self.triangle_synth.start_tick = clock;
+                        self.synth.base_generator.frequency = midi_id_to_frequency(note);
+                        self.synth.base_generator.start_tick = clock;
                         let note_length = note_length as f32;
-                        self.adsr.sustain = quarter_duration * note_length - 0.2; //0.2s are a+d+r
-                        self.adsr.start_tick = clock;
+                        self.synth.adsr.sustain = quarter_duration * note_length - 0.2; //0.2s are a+d+r
+                        self.synth.adsr.start_tick = clock;
                     }
                     self.current_note_quarter_count += 1;
                     if note_length == self.current_note_quarter_count {
@@ -144,18 +145,15 @@ mod tests {
                     }
                 }
 
-                let mut poly_sample = self.triangle_synth.generate(&sample_timing);
-                //turn volume down
-                poly_sample *= 0.1;
+                let mut poly_sample = self.synth.next_sample(&sample_timing);
 
-                let adsr_value = self.adsr.generate(&sample_timing);
+                //process delay effect
+                poly_sample = self.delay.process(&sample_timing, poly_sample);
 
-                //ADSR controls volume
-                poly_sample.apply(&adsr_value);
                 //make stereo
                 poly_sample.polify(2);
 
-                self.delay.process(&sample_timing, poly_sample)
+                poly_sample
             }
         }
 
@@ -164,7 +162,11 @@ mod tests {
         let mut master_patch = MasterPatch::default();
 
         let patch = MyPatch {
-            adsr: AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
+            synth: BasicSynthesizer::new(
+                TriangleGenerator::default(),
+                AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
+                0.1,
+            ),
             delay: Delay::new(0.3, 0.5),
             melody: vec![
                 76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,

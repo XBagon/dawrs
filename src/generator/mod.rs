@@ -5,8 +5,8 @@ pub use adsr::AdsrGenerator;
 pub use sine::SineGenerator;
 pub use triangle::TriangleGenerator;
 
-use crate::{SampleTiming, PolySample};
+use crate::{PolySample, SampleTiming};
 
-pub trait Generator {
+pub trait Generator: Send {
     fn generate(&mut self, sample_timing: &SampleTiming) -> PolySample;
 }

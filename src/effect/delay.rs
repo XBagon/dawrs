@@ -1,5 +1,5 @@
 use super::Effect;
-use crate::{SampleTiming, PolySample};
+use crate::{PolySample, SampleTiming};
 use std::collections::VecDeque;
 
 #[derive(Clone, Default)]
