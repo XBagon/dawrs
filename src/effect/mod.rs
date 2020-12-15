@@ -1,7 +1,10 @@
 mod delay;
+mod lag;
 mod oscilloscope;
+
 use crate::{PolySample, SampleTiming};
 pub use delay::Delay;
+pub use lag::Lag;
 pub use oscilloscope::Oscilloscope;
 
 pub trait Effect: Send {

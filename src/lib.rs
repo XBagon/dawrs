@@ -23,6 +23,7 @@ mod tests {
         synthesizer::BasicSynthesizer,
     };
     use rand::random;
+    use crate::effect::Lag;
 
     fn midi_id_to_frequency(midi_id: u8) -> f32 {
         (2 as f32).powf((midi_id - 69) as f32 / 12.0) * 440.0
@@ -111,6 +112,7 @@ mod tests {
         struct MyPatch {
             synth: BasicSynthesizer<TriangleGenerator>,
             delay: Delay,
+            lag: Lag,
             melody: Vec<u8>,
             note_lengths: Vec<u8>,
             melody_index: usize,
@@ -149,6 +151,9 @@ mod tests {
                 //process delay effect
                 poly_sample = self.delay.process(&sample_timing, poly_sample);
 
+                //process lag effect
+                poly_sample = self.lag.process(&sample_timing, poly_sample);
+
                 //make stereo
                 poly_sample.polify(2);
 
@@ -167,6 +172,7 @@ mod tests {
                 0.1,
             ),
             delay: Delay::new(0.3, 0.5),
+            lag: Lag::new(0.0001, 0.0001, 0.2, 0.0),
             melody: vec![
                 76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
                 74, 74, 76, 74, 72,
