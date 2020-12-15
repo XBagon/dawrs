@@ -22,6 +22,7 @@ mod tests {
         prelude::*,
         synthesizer::BasicSynthesizer,
     };
+    use rand::random;
 
     fn midi_id_to_frequency(midi_id: u8) -> f32 {
         (2 as f32).powf((midi_id - 69) as f32 / 12.0) * 440.0
@@ -105,7 +106,7 @@ mod tests {
     }
 
     #[test]
-    fn marry_had_a_little_lamb() {
+    fn mary_had_a_little_lamb() {
         #[derive(Default, Clone)]
         struct MyPatch {
             synth: BasicSynthesizer<TriangleGenerator>,
@@ -131,9 +132,7 @@ mod tests {
                     if self.current_note_quarter_count == 0 {
                         self.synth.base_generator.frequency = midi_id_to_frequency(note);
                         self.synth.base_generator.start_tick = clock;
-                        let note_length = note_length as f32;
-                        self.synth.adsr.sustain = quarter_duration * note_length - 0.2; //0.2s are a+d+r
-                        self.synth.adsr.start_tick = clock;
+                        self.synth.play(quarter_duration * note_length as f32 - 0.2);
                     }
                     self.current_note_quarter_count += 1;
                     if note_length == self.current_note_quarter_count {
@@ -149,6 +148,89 @@ mod tests {
 
                 //process delay effect
                 poly_sample = self.delay.process(&sample_timing, poly_sample);
+
+                //make stereo
+                poly_sample.polify(2);
+
+                poly_sample
+            }
+        }
+
+        let mut cpal = Cpal::new().unwrap();
+
+        let mut master_patch = MasterPatch::default();
+
+        let patch = MyPatch {
+            synth: BasicSynthesizer::new(
+                Default::default(),
+                AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
+                0.1,
+            ),
+            delay: Delay::new(0.3, 0.5),
+            melody: vec![
+                76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
+                74, 74, 76, 74, 72,
+            ],
+            note_lengths: vec![
+                1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
+            ],
+            ..MyPatch::default()
+        };
+
+        master_patch.add_patch(patch);
+
+        master_patch.play(&mut cpal, SampleTiming::default());
+    }
+
+    #[test]
+    fn mary_had_a_little_lamb_chordified() {
+        #[derive(Default, Clone)]
+        struct MyPatch {
+            synth: BasicSynthesizer<TriangleGenerator>,
+            delay: Delay,
+            melody: Vec<u8>,
+            note_lengths: Vec<u8>,
+            melody_index: usize,
+            current_note_quarter_count: u8,
+        }
+
+        impl Patch for MyPatch {
+            fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
+                //quarter notes of 0.4 seconds
+                let quarter_duration = 0.4;
+                let quarter_sample_count = (sample_timing.sample_rate * quarter_duration) as usize;
+
+                let clock = sample_timing.clock;
+
+                if clock % quarter_sample_count == 0 {
+                    //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;
+                    let note_length = self.note_lengths[self.melody_index];
+                    if note_length == self.current_note_quarter_count {
+                        self.current_note_quarter_count = 0;
+                        self.melody_index += 1;
+                        if self.melody_index == self.melody.len() {
+                            self.melody_index = 0;
+                        }
+                    }
+                    if self.current_note_quarter_count == 0 {
+                        let note_length = self.note_lengths[self.melody_index];
+                        self.synth.base_generator.start_tick = clock;
+                        let note_length = note_length as f32;
+                        self.synth.play(quarter_duration * note_length as f32 - 0.2);
+                    }
+                    self.current_note_quarter_count += 1;
+                }
+
+                let note = self.melody[self.melody_index];
+
+                self.synth.base_generator.frequency = midi_id_to_frequency(note);
+                let mut poly_sample = self.synth.next_sample(&sample_timing) * (1.0 / 3.0);
+
+                self.synth.base_generator.frequency = midi_id_to_frequency(note + 4);
+                poly_sample += self.synth.next_sample(&sample_timing) * (1.0 / 3.0);
+
+                self.synth.base_generator.frequency = midi_id_to_frequency(note + 7);
+                poly_sample += self.synth.next_sample(&sample_timing) * (1.0 / 3.0);
 
                 //make stereo
                 poly_sample.polify(2);
@@ -208,8 +290,8 @@ mod tests {
                 let sample_count = sample_timing.duration_to_sample_count(DURATION);
 
                 if sample_timing.clock == sample_count - 1 {
-                    self.sine_oscope.plot("sine.png").unwrap();
-                    self.triangle_oscope.plot("triangle.png").unwrap();
+                    self.sine_oscope.plot("oscilloscope_output/sine.png").unwrap();
+                    self.triangle_oscope.plot("oscilloscope_output/triangle.png").unwrap();
                 }
 
                 let mut adsr = self.adsr_gen.generate(&sample_timing);
@@ -218,7 +300,7 @@ mod tests {
                 let sample_count = sample_timing.duration_to_sample_count(0.05 + 0.05 + 0.2 + 0.1);
 
                 if sample_timing.clock == sample_count - 1 {
-                    self.adsr_oscope.plot("adsr.png").unwrap();
+                    self.adsr_oscope.plot("oscilloscope_output/adsr.png").unwrap();
                     std::process::exit(0);
                 }
 
@@ -238,6 +320,81 @@ mod tests {
             triangle_oscope: Oscilloscope::new(DURATION, DURATION / 1000.0, 0, 512, 1000.0),
             adsr_gen: AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
             adsr_oscope: Oscilloscope::new(0.05 + 0.05 + 0.2 + 0.1, 0.01, 0, 512, 1.0),
+        };
+
+        master_patch.add_patch(patch);
+
+        master_patch.play(&mut cpal, SampleTiming::default());
+    }
+
+    #[test]
+    fn playground() {
+        #[derive(Default, Clone)]
+        struct MyPatch {
+            kick: BasicSynthesizer<TriangleGenerator>,
+            hi_hat: BasicSynthesizer<TriangleGenerator>,
+            delay: Delay,
+        }
+
+        impl Patch for MyPatch {
+            fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
+                let sixteenth_duration = 0.1;
+                let sixteenth_sample_count =
+                    (sample_timing.sample_rate * sixteenth_duration) as usize;
+
+                let clock = sample_timing.clock;
+
+                if clock % sixteenth_sample_count == 0 {
+                    if clock % (sixteenth_sample_count * 4) == 0 {
+                        self.kick.base_generator.frequency = 40.0;
+                        self.kick.play(0.01);
+                    } else if clock
+                        % (sixteenth_sample_count * 16)
+                        % (sixteenth_sample_count * 2 * 5)
+                        == 0
+                    {
+                        self.kick.base_generator.frequency = 60.0;
+                        self.kick.play(0.01);
+                    }
+                }
+
+                if clock % (sixteenth_sample_count * 16 / 12) == 0 {
+                    if clock > sixteenth_sample_count * 16 * 4 {
+                        self.hi_hat.play(0.004);
+                    }
+                }
+
+                let mut poly_sample = self.kick.next_sample(&sample_timing);
+
+                //process delay effect
+                poly_sample = self.delay.process(&sample_timing, poly_sample);
+
+                poly_sample += self.hi_hat.next_sample(&sample_timing) * random();
+
+                //make stereo
+                poly_sample.polify(2);
+
+                poly_sample
+            }
+        }
+
+        let mut cpal = Cpal::new().unwrap();
+
+        let mut master_patch = MasterPatch::default();
+
+        let patch = MyPatch {
+            kick: BasicSynthesizer::new(
+                TriangleGenerator::new(40.0),
+                AdsrGenerator::new(0.001, 0.05, 0.9, 0.1, 0.04),
+                0.1,
+            ),
+            hi_hat: BasicSynthesizer::new(
+                TriangleGenerator::new(1200.0),
+                AdsrGenerator::new(0.001, 0.001, 0.9, 0.1, 0.03),
+                0.1,
+            ),
+            delay: Delay::new(0.1, 0.3),
+            ..MyPatch::default()
         };
 
         master_patch.add_patch(patch);
