@@ -20,7 +20,7 @@ impl Lag {
         buffer_length: f32,
         buffer_length_rand_bias: f32,
     ) -> Self {
-        debug_assert!(buffer_length >= buffer_length_rand_bias);
+        assert!(buffer_length >= buffer_length_rand_bias);
         Self {
             start_chance,
             stop_chance,
