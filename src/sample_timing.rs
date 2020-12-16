@@ -4,6 +4,13 @@ pub struct SampleTiming {
     pub clock: usize,
 }
 
+impl SampleTiming {
+    pub fn new(sample_rate: f32) -> Self {
+        SampleTiming { sample_rate, clock: 0 }
+    }
+}
+
+//TODO: remove
 impl Default for SampleTiming {
     fn default() -> Self {
         Self {

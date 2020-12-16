@@ -85,7 +85,7 @@ mod tests {
             }
         }
 
-        let mut cpal = Cpal::new().unwrap();
+        let cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -103,7 +103,7 @@ mod tests {
         master_patch.add_patch(patch);
         //master_patch.add_patch(patch2);
 
-        master_patch.play(&mut cpal, SampleTiming::default());
+        cpal.play_patch(&mut master_patch);
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
             }
         }
 
-        let mut cpal = Cpal::new().unwrap();
+        let cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -172,7 +172,7 @@ mod tests {
                 0.1,
             ),
             delay: Delay::new(0.3, 0.5),
-            lag: Lag::new(0.0001, 0.0001, 0.2, 0.0),
+            lag: Lag::new(0.001, 0.0001, 0.01, 0.0),
             melody: vec![
                 76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
                 74, 74, 76, 74, 72,
@@ -185,7 +185,7 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        master_patch.play(&mut cpal, SampleTiming::default());
+        cpal.play_patch(&mut master_patch);
     }
 
     #[test]
@@ -245,7 +245,7 @@ mod tests {
             }
         }
 
-        let mut cpal = Cpal::new().unwrap();
+        let cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -268,7 +268,7 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        master_patch.play(&mut cpal, SampleTiming::default());
+        cpal.play_patch(&mut master_patch);
     }
 
     #[test]
@@ -315,7 +315,7 @@ mod tests {
             }
         }
 
-        let mut cpal = Cpal::new().unwrap();
+        let cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -330,7 +330,7 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        master_patch.play(&mut cpal, SampleTiming::default());
+        cpal.play_patch(&mut master_patch);
     }
 
     #[test]
@@ -384,7 +384,7 @@ mod tests {
             }
         }
 
-        let mut cpal = Cpal::new().unwrap();
+        let cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -405,6 +405,6 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        master_patch.play(&mut cpal, SampleTiming::default());
+        cpal.play_patch(&mut master_patch);
     }
 }
