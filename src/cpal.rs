@@ -25,7 +25,7 @@ impl Cpal {
         })
     }
 
-    pub fn play_patch<P: OutPatch>(&self, patch: &mut P) {
+    pub fn play_patch<P: 'static + OutPatch>(&self, patch: P) {
         match self.config.sample_format() {
             cpal::SampleFormat::F32 => self.play_on::<f32, P>(patch).unwrap(),
             cpal::SampleFormat::I16 => self.play_on::<i16, P>(patch).unwrap(),
@@ -33,7 +33,7 @@ impl Cpal {
         }
     }
 
-    fn play_on<T, P: OutPatch>(&self, patch: &mut P) -> Result<(), anyhow::Error>
+    fn play_on<T, P: 'static + OutPatch>(&self, mut patch: P) -> Result<(), anyhow::Error>
         where
             T: cpal::Sample,
     {
