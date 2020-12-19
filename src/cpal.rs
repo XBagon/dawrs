@@ -3,11 +3,7 @@ use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
     Device, Host, Stream, StreamConfig, SupportedStreamConfig,
 };
-use std::{
-    mem::ManuallyDrop,
-    ptr,
-    sync::mpsc,
-};
+use std::{mem::ManuallyDrop, ptr, sync::mpsc};
 
 pub struct Cpal<P: OutPatch + 'static> {
     pub host: Host,

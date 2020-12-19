@@ -20,7 +20,9 @@ pub struct MasterPatch {
 
 impl MasterPatch {
     pub fn new() -> Self {
-        MasterPatch { patches: Vec::new() }
+        MasterPatch {
+            patches: Vec::new(),
+        }
     }
 
     pub fn add_patch<P: 'static + Patch>(&mut self, patch: P) {

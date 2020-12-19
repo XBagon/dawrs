@@ -25,7 +25,7 @@ mod tests {
     use rand::random;
 
     fn midi_id_to_frequency(midi_id: u8) -> f32 {
-        (2 as f32).powf((midi_id - 69) as f32 / 12.0) * 440.0
+        (2.0f32).powf((midi_id - 69) as f32 / 12.0) * 440.0
     }
 
     #[test]
