@@ -1,4 +1,5 @@
 use crate::{patch::OutPatch, SampleTiming};
+use anyhow::anyhow;
 use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
     Device, Host, Stream, StreamConfig, SupportedStreamConfig,
@@ -9,8 +10,8 @@ pub struct Cpal<P: OutPatch + 'static> {
     pub host: Host,
     pub device: Device,
     pub config: SupportedStreamConfig,
-    pub active_stream: Option<Stream>,
-    pub receiver: Option<mpsc::Receiver<P>>,
+    active_stream: Option<Stream>,
+    receiver: Option<mpsc::Receiver<P>>,
 }
 
 struct ReturningPatch<P: OutPatch> {
@@ -30,7 +31,7 @@ impl<P: OutPatch> Cpal<P> {
         let host = cpal::default_host();
 
         let device = host.default_output_device().expect("failed to find a default output device");
-        let config = device.default_output_config().unwrap();
+        let config = device.default_output_config()?;
 
         Ok(Self {
             host,
@@ -78,5 +79,15 @@ impl<P: OutPatch> Cpal<P> {
         self.active_stream = Some(stream);
 
         Ok(())
+    }
+
+    pub fn stop(&mut self) -> Result<P, anyhow::Error> {
+        self.active_stream = None;
+        Ok(self
+            .receiver
+            .as_ref()
+            .ok_or_else(|| anyhow!("Cpal isn't playing a patch at the moment"))?
+            .recv()
+            .unwrap())
     }
 }
