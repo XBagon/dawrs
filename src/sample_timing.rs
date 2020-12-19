@@ -6,7 +6,10 @@ pub struct SampleTiming {
 
 impl SampleTiming {
     pub fn new(sample_rate: f32) -> Self {
-        SampleTiming { sample_rate, clock: 0 }
+        SampleTiming {
+            sample_rate,
+            clock: 0,
+        }
     }
 }
 

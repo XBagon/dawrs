@@ -17,13 +17,12 @@ pub mod prelude {
 #[cfg(test)]
 mod tests {
     use crate::{
-        effect::{Delay, Effect, Oscilloscope},
+        effect::{Delay, Effect, Lag, Oscilloscope},
         generator::{AdsrGenerator, Generator, SineGenerator, TriangleGenerator},
         prelude::*,
         synthesizer::BasicSynthesizer,
     };
     use rand::random;
-    use crate::effect::Lag;
 
     fn midi_id_to_frequency(midi_id: u8) -> f32 {
         (2 as f32).powf((midi_id - 69) as f32 / 12.0) * 440.0
@@ -85,7 +84,7 @@ mod tests {
             }
         }
 
-        let cpal = Cpal::new().unwrap();
+        let mut cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -104,6 +103,7 @@ mod tests {
         //master_patch.add_patch(patch2);
 
         cpal.play_patch(master_patch);
+        std::thread::park();
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
             }
         }
 
-        let cpal = Cpal::new().unwrap();
+        let mut cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -186,6 +186,7 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(master_patch);
+        std::thread::park();
     }
 
     #[test]
@@ -245,7 +246,7 @@ mod tests {
             }
         }
 
-        let cpal = Cpal::new().unwrap();
+        let mut cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -269,6 +270,7 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(master_patch);
+        std::thread::park();
     }
 
     #[test]
@@ -315,7 +317,7 @@ mod tests {
             }
         }
 
-        let cpal = Cpal::new().unwrap();
+        let mut cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -331,6 +333,7 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(master_patch);
+        std::thread::park();
     }
 
     #[test]
@@ -384,7 +387,7 @@ mod tests {
             }
         }
 
-        let cpal = Cpal::new().unwrap();
+        let mut cpal = Cpal::new().unwrap();
 
         let mut master_patch = MasterPatch::default();
 
@@ -406,5 +409,6 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(master_patch);
+        std::thread::park();
     }
 }

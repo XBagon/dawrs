@@ -4,19 +4,23 @@ pub trait Patch: Send {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample;
 }
 
-pub trait OutPatch : Patch {
-    fn write_data<T: cpal::Sample>(&mut self, output: &mut [T], channels: usize, sample_timing: &mut SampleTiming);
+pub trait OutPatch: Patch {
+    fn write_data<T: cpal::Sample>(
+        &mut self,
+        output: &mut [T],
+        channels: usize,
+        sample_timing: &mut SampleTiming,
+    );
 }
 
 #[derive(Default)]
 pub struct MasterPatch {
     patches: Vec<Box<dyn Patch>>,
-    sample_timing: SampleTiming,
 }
 
 impl MasterPatch {
-    pub fn new(sample_timing: SampleTiming) -> Self {
-        MasterPatch { sample_timing, ..Default::default() }
+    pub fn new() -> Self {
+        MasterPatch { patches: Vec::new() }
     }
 
     pub fn add_patch<P: 'static + Patch>(&mut self, patch: P) {
@@ -44,8 +48,12 @@ impl Patch for MasterPatch {
 }
 
 impl OutPatch for MasterPatch {
-    fn write_data<T: cpal::Sample>(&mut self, output: &mut [T], channels: usize, sample_timing: &mut SampleTiming)
-    {
+    fn write_data<T: cpal::Sample>(
+        &mut self,
+        output: &mut [T],
+        channels: usize,
+        sample_timing: &mut SampleTiming,
+    ) {
         for frame in output.chunks_mut(channels) {
             let mut next_samples = self
                 .next_sample(sample_timing)
