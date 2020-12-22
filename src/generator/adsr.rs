@@ -1,5 +1,5 @@
 use super::Generator;
-use crate::{PolySample, SampleTiming};
+use crate::prelude::*;
 
 #[derive(Clone)]
 pub struct AdsrGenerator {
@@ -54,6 +54,6 @@ impl Generator for AdsrGenerator {
                 }
             }
         };
-        PolySample(vec![value])
+        poly_sample!([value])
     }
 }

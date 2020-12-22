@@ -1,4 +1,4 @@
-use crate::{PolySample, SampleTiming};
+use crate::prelude::*;
 
 pub trait Patch: Send {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample;
@@ -32,7 +32,7 @@ impl MasterPatch {
 
 impl Patch for MasterPatch {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
-        let mut master = Vec::new();
+        let mut master = poly_sample!();
         for patch in &mut self.patches {
             for (i, sample) in patch.next_sample(&sample_timing).0.into_iter().enumerate() {
                 match master.get_mut(i) {
@@ -45,7 +45,7 @@ impl Patch for MasterPatch {
                 }
             }
         }
-        PolySample(master)
+        master
     }
 }
 

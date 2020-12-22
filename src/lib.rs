@@ -11,7 +11,7 @@ pub use poly_sample::PolySample;
 pub use sample_timing::SampleTiming;
 
 pub mod prelude {
-    pub use crate::{patch::*, Cpal, PolySample, SampleTiming};
+    pub use crate::{patch::*, poly_sample, Cpal, PolySample, SampleTiming};
 }
 
 #[cfg(test)]
@@ -313,7 +313,7 @@ mod tests {
                 }
 
                 let sample_value = sine[0] * triangle[0] * adsr[0] * 0.1;
-                PolySample(vec![sample_value; 2])
+                poly_sample!([sample_value; 2])
             }
         }
 

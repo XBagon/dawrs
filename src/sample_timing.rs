@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct SampleTiming {
     pub sample_rate: f32,
     pub clock: usize,

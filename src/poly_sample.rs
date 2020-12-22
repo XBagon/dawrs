@@ -1,9 +1,40 @@
 use shrinkwraprs::Shrinkwrap;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Range};
 
+#[cfg(feature = "mono")]
 #[derive(Clone, Shrinkwrap)]
 #[shrinkwrap(mutable)]
-pub struct PolySample(pub Vec<f32>);
+pub struct PolySample(pub tinyvec::ArrayVec<[f32; 1]>);
+
+#[cfg(feature = "stereo")]
+#[derive(Clone, Shrinkwrap)]
+#[shrinkwrap(mutable)]
+pub struct PolySample(pub tinyvec::ArrayVec<[f32; 2]>);
+
+#[cfg(feature = "unlimited")]
+#[derive(Clone, Shrinkwrap)]
+#[shrinkwrap(mutable)]
+pub struct PolySample(pub tinyvec::TinyVec<[f32; 2]>);
+
+#[cfg(feature = "unlimited")]
+#[macro_export]
+macro_rules! poly_sample {
+    ([$e:expr; $n:expr]) => (PolySample(tinyvec::tiny_vec![$e; $n]));
+    ([$($e:expr)*]) => (PolySample(tinyvec::tiny_vec![$($e)*]));
+    ([$e:expr]) => (PolySample(tinyvec::tiny_vec![_ => $e]));
+    ($e:expr) => (PolySample($e));
+    () => (PolySample(tinyvec::tiny_vec![]));
+}
+
+#[cfg(not(feature = "unlimited"))]
+#[macro_export]
+macro_rules! poly_sample {
+    ([$e:expr; $n:expr]) => (PolySample(tinyvec::array_vec![$e; $n]));
+    ([$($e:expr)*]) => (PolySample(tinyvec::array_vec![$($e)*]));
+    ([$e:expr]) => (PolySample(tinyvec::array_vec![_ => $e]));
+    ($e:expr) => (PolySample($e));
+    () => (PolySample(tinyvec::array_vec![]));
+}
 
 impl Add<PolySample> for PolySample {
     type Output = PolySample;
@@ -72,7 +103,9 @@ impl PolySample {
 
     /// Clones all channels `n` times and concatenates them.
     pub fn polify(&mut self, n: usize) {
-        self.0 = self.0.repeat(n);
+        for _ in 0..(n - 1) {
+            self.0.append(&mut self.0.clone());
+        }
     }
 
     pub fn linear_map(&mut self, from: Range<f32>, to: Range<f32>) {
