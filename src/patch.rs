@@ -1,5 +1,4 @@
-use crate::prelude::*;
-use crate::cpal::CpalEvent;
+use crate::{cpal::CpalEvent, prelude::*};
 
 pub trait Patch: Send {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample;
