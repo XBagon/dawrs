@@ -103,7 +103,6 @@ mod tests {
         //master_patch.add_patch(patch2);
 
         cpal.play_patch(&mut master_patch);
-        std::thread::park();
     }
 
     #[test]
@@ -142,6 +141,7 @@ mod tests {
                         self.melody_index += 1;
                         if self.melody_index == self.melody.len() {
                             self.melody_index = 0;
+                            return poly_sample!();
                         }
                     }
                 }
@@ -172,7 +172,7 @@ mod tests {
                 0.1,
             ),
             delay: Delay::new(0.3, 0.5),
-            lag: Lag::new(0.001, 0.0001, 0.01, 0.0),
+            lag: Lag::new(0.0001, 0.0001, 0.01, 0.0),
             melody: vec![
                 76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
                 74, 74, 76, 74, 72,
@@ -186,7 +186,6 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(&mut master_patch);
-        std::thread::park();
     }
 
     #[test]
@@ -270,7 +269,6 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(&mut master_patch);
-        std::thread::park();
     }
 
     #[test]
@@ -333,7 +331,6 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(&mut master_patch);
-        std::thread::park();
     }
 
     #[test]
@@ -409,6 +406,5 @@ mod tests {
         master_patch.add_patch(patch);
 
         cpal.play_patch(&mut master_patch);
-        std::thread::park();
     }
 }

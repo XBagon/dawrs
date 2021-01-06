@@ -78,7 +78,7 @@ impl<P: OutPatch> Cpal<P> {
                 event_sender,
             };
 
-            let patch = (|| -> Result<P> {
+            (|| -> Result<P> {
                 let stream = self.device.build_output_stream(
                     config,
                     move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
@@ -91,19 +91,18 @@ impl<P: OutPatch> Cpal<P> {
                     err_fn,
                 )?;
                 stream.play().unwrap();
-
                 loop {
                     match event_receiver.recv().unwrap() {
                         CpalEvent::Exit => {
+                            drop(stream);
                             return Ok(return_receiver.recv().unwrap());
                         }
                         CpalEvent::Pause => {}
                         CpalEvent::Resume => {}
                     }
                 }
-            })();
-
-            patch.unwrap_or_else(|err| {
+            })()
+            .unwrap_or_else(|err| {
                 result = Err(err);
                 return_receiver.recv().unwrap()
             })

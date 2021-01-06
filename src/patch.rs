@@ -34,7 +34,11 @@ impl Patch for MasterPatch {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
         let mut master = poly_sample!();
         for patch in &mut self.patches {
-            for (i, sample) in patch.next_sample(&sample_timing).0.into_iter().enumerate() {
+            let patch_samples = patch.next_sample(&sample_timing).0;
+            if patch_samples.len() == 0 {
+                return poly_sample!();
+            }
+            for (i, sample) in patch_samples.into_iter().enumerate() {
                 match master.get_mut(i) {
                     None => {
                         master.push(sample);
@@ -57,9 +61,13 @@ impl OutPatch for MasterPatch {
         sample_timing: &mut SampleTiming,
     ) -> Option<CpalEvent> {
         for frame in output.chunks_mut(channels) {
-            let mut next_samples = self
-                .next_sample(sample_timing)
-                .0
+            let next_samples = self.next_sample(sample_timing).0;
+
+            if next_samples.len() == 0 {
+                return Some(CpalEvent::Exit);
+            }
+
+            let mut next_samples = next_samples
                 .into_iter()
                 .chain(std::iter::repeat(0.0))
                 .map(|s| cpal::Sample::from(&s));
