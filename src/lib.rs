@@ -102,7 +102,7 @@ mod tests {
         master_patch.add_patch(patch);
         //master_patch.add_patch(patch2);
 
-        cpal.play_patch(master_patch);
+        cpal.play_patch(&mut master_patch);
         std::thread::park();
     }
 
@@ -185,7 +185,7 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        cpal.play_patch(master_patch);
+        cpal.play_patch(&mut master_patch);
         std::thread::park();
     }
 
@@ -269,7 +269,7 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        cpal.play_patch(master_patch);
+        cpal.play_patch(&mut master_patch);
         std::thread::park();
     }
 
@@ -332,7 +332,7 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        cpal.play_patch(master_patch);
+        cpal.play_patch(&mut master_patch);
         std::thread::park();
     }
 
@@ -408,7 +408,7 @@ mod tests {
 
         master_patch.add_patch(patch);
 
-        cpal.play_patch(master_patch);
+        cpal.play_patch(&mut master_patch);
         std::thread::park();
     }
 }
