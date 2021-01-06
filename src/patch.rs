@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::cpal::CpalEvent;
 
 pub trait Patch: Send {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample;
@@ -10,7 +11,7 @@ pub trait OutPatch: Patch {
         output: &mut [T],
         channels: usize,
         sample_timing: &mut SampleTiming,
-    );
+    ) -> Option<CpalEvent>;
 }
 
 #[derive(Default)]
@@ -55,7 +56,7 @@ impl OutPatch for MasterPatch {
         output: &mut [T],
         channels: usize,
         sample_timing: &mut SampleTiming,
-    ) {
+    ) -> Option<CpalEvent> {
         for frame in output.chunks_mut(channels) {
             let mut next_samples = self
                 .next_sample(sample_timing)
@@ -68,5 +69,6 @@ impl OutPatch for MasterPatch {
             }
             sample_timing.tick();
         }
+        None
     }
 }

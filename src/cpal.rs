@@ -1,33 +1,39 @@
 use crate::{patch::OutPatch, SampleTiming};
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
-    Device, Host, Stream, StreamConfig, SupportedStreamConfig,
+    Device, Host, StreamConfig, SupportedStreamConfig,
 };
-use std::{mem::ManuallyDrop, ptr, sync::mpsc};
+use std::{mem::ManuallyDrop, ptr};
 
 pub struct Cpal<P: OutPatch + 'static> {
     pub host: Host,
     pub device: Device,
     pub config: SupportedStreamConfig,
-    active_stream: Option<Stream>,
-    receiver: Option<mpsc::Receiver<P>>,
+    return_receiver: Option<crossbeam_channel::Receiver<P>>,
 }
 
-struct ReturningPatch<P: OutPatch> {
+struct CpalPatch<P: OutPatch> {
     patch: ManuallyDrop<P>,
-    sender: mpsc::Sender<P>,
+    return_sender: crossbeam_channel::Sender<P>,
+    event_sender: crossbeam_channel::Sender<CpalEvent>,
 }
 
-impl<P: OutPatch> Drop for ReturningPatch<P> {
+impl<P: OutPatch> Drop for CpalPatch<P> {
     fn drop(&mut self) {
         let patch = unsafe { ManuallyDrop::into_inner(ptr::read(&self.patch)) };
-        self.sender.send(patch).unwrap();
+        self.return_sender.send(patch).unwrap();
     }
 }
 
+pub enum CpalEvent {
+    Exit,
+    Pause,
+    Resume,
+}
+
 impl<P: OutPatch> Cpal<P> {
-    pub fn new() -> Result<Self, anyhow::Error> {
+    pub fn new() -> Result<Self> {
         let host = cpal::default_host();
 
         let device = host.default_output_device().expect("failed to find a default output device");
@@ -37,8 +43,7 @@ impl<P: OutPatch> Cpal<P> {
             host,
             device,
             config,
-            active_stream: None,
-            receiver: None,
+            return_receiver: None,
         })
     }
 
@@ -50,7 +55,7 @@ impl<P: OutPatch> Cpal<P> {
         }
     }
 
-    fn play_on<T>(&mut self, patch: P) -> Result<(), anyhow::Error>
+    fn play_on<T>(&mut self, patch: P) -> Result<()>
     where
         T: cpal::Sample,
     {
@@ -61,30 +66,40 @@ impl<P: OutPatch> Cpal<P> {
 
         let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
-        let (sender, receiver) = mpsc::channel();
-        self.receiver = Some(receiver);
-        let mut returning_patch = ReturningPatch {
+        let (return_sender, return_receiver) = crossbeam_channel::bounded(1);
+        let (event_sender, event_receiver) = crossbeam_channel::bounded(1);
+        self.return_receiver = Some(return_receiver);
+        let mut cpal_patch = CpalPatch {
             patch: ManuallyDrop::new(patch),
-            sender,
+            return_sender,
+            event_sender,
         };
 
         let stream = self.device.build_output_stream(
             config,
             move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
-                returning_patch.patch.write_data(data, channels, &mut sample_timing)
+                if let Some(event) = cpal_patch.patch.write_data(data, channels, &mut sample_timing) {
+                    cpal_patch.event_sender.send(event).unwrap();
+                }
             },
             err_fn,
         )?;
         stream.play()?;
-        self.active_stream = Some(stream);
 
-        Ok(())
+        loop {
+            match event_receiver.recv()? {
+                CpalEvent::Exit => {
+                    self.stop()?;
+                }
+                CpalEvent::Pause => {}
+                CpalEvent::Resume => {}
+            }
+        }
     }
 
-    pub fn stop(&mut self) -> Result<P, anyhow::Error> {
-        self.active_stream = None;
+    fn stop(&mut self) -> Result<P> {
         Ok(self
-            .receiver
+            .return_receiver
             .as_ref()
             .ok_or_else(|| anyhow!("Cpal isn't playing a patch at the moment"))?
             .recv()

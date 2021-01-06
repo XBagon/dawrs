@@ -1,6 +1,6 @@
 use super::Effect;
 use crate::{PolySample, SampleTiming};
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 use plotters::prelude::*;
 use std::{collections::VecDeque, path::Path};
 
@@ -34,7 +34,7 @@ impl Oscilloscope {
         }
     }
 
-    pub fn plot<P: AsRef<Path>>(&self, path: P) -> Result<(), anyhow::Error> {
+    pub fn plot<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         match self.buffer.len() {
             0 => return Err(anyhow!("No elements to plot in buffer")),
             1 => return Err(anyhow!("Only one element to plot in buffer")),
