@@ -11,13 +11,15 @@ pub use poly_sample::PolySample;
 pub use sample_timing::SampleTiming;
 
 pub mod prelude {
-    pub use crate::{patch::*, poly_sample, Cpal, PolySample, SampleTiming};
+    pub use crate::{
+        effect::Effect, generator::Generator, patch::*, poly_sample, Cpal, PolySample, SampleTiming,
+    };
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        effect::{Delay, Effect, Lag, Oscilloscope},
+        effect::{Delay, Effect, Oscilloscope},
         generator::{AdsrGenerator, Generator, SineGenerator, TriangleGenerator},
         prelude::*,
         synthesizer::BasicSynthesizer,
@@ -101,89 +103,6 @@ mod tests {
 
         master_patch.add_patch(patch);
         //master_patch.add_patch(patch2);
-
-        cpal.play_patch(&mut master_patch);
-    }
-
-    #[test]
-    fn mary_had_a_little_lamb() {
-        #[derive(Default, Clone)]
-        struct MyPatch {
-            synth: BasicSynthesizer<TriangleGenerator>,
-            delay: Delay,
-            lag: Lag,
-            melody: Vec<u8>,
-            note_lengths: Vec<u8>,
-            melody_index: usize,
-            current_note_quarter_count: u8,
-        }
-
-        impl Patch for MyPatch {
-            fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
-                //quarter notes of 0.4 seconds
-                let quarter_duration = 0.4;
-                let quarter_sample_count = (sample_timing.sample_rate * quarter_duration) as usize;
-
-                let clock = sample_timing.clock;
-
-                if clock % quarter_sample_count == 0 {
-                    //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;
-                    let note = self.melody[self.melody_index];
-                    let note_length = self.note_lengths[self.melody_index];
-                    if self.current_note_quarter_count == 0 {
-                        self.synth.base_generator.frequency = midi_id_to_frequency(note);
-                        self.synth.base_generator.start_tick = clock;
-                        self.synth.play(quarter_duration * note_length as f32 - 0.2);
-                    }
-                    self.current_note_quarter_count += 1;
-                    if note_length == self.current_note_quarter_count {
-                        self.current_note_quarter_count = 0;
-                        self.melody_index += 1;
-                        if self.melody_index == self.melody.len() {
-                            self.melody_index = 0;
-                            return poly_sample!();
-                        }
-                    }
-                }
-
-                let mut poly_sample = self.synth.next_sample(&sample_timing);
-
-                //process delay effect
-                poly_sample = self.delay.process(&sample_timing, poly_sample);
-
-                //process lag effect
-                poly_sample = self.lag.process(&sample_timing, poly_sample);
-
-                //make stereo
-                poly_sample.polify(2);
-
-                poly_sample
-            }
-        }
-
-        let mut cpal = Cpal::new().unwrap();
-
-        let mut master_patch = MasterPatch::default();
-
-        let patch = MyPatch {
-            synth: BasicSynthesizer::new(
-                Default::default(),
-                AdsrGenerator::new(0.05, 0.05, 0.7, 0.2, 0.1),
-                0.1,
-            ),
-            delay: Delay::new(0.3, 0.5),
-            lag: Lag::new(0.0001, 0.0001, 0.01, 0.0),
-            melody: vec![
-                76, 74, 72, 74, 76, 76, 76, 74, 74, 74, 76, 79, 79, 76, 74, 72, 74, 76, 76, 76, 76,
-                74, 74, 76, 74, 72,
-            ],
-            note_lengths: vec![
-                1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
-            ],
-            ..MyPatch::default()
-        };
-
-        master_patch.add_patch(patch);
 
         cpal.play_patch(&mut master_patch);
     }
