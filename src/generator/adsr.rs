@@ -8,7 +8,6 @@ pub struct AdsrGenerator {
     pub sustain_level: f32,
     pub sustain: f32,
     pub release: f32,
-    pub start_tick: usize,
 }
 
 impl AdsrGenerator {
@@ -19,7 +18,6 @@ impl AdsrGenerator {
             sustain,
             sustain_level,
             release,
-            start_tick: 0,
         }
     }
 }
@@ -32,7 +30,7 @@ impl Default for AdsrGenerator {
 
 impl Generator for AdsrGenerator {
     fn generate(&mut self, sample_timing: &SampleTiming) -> PolySample {
-        let mut sample_clock = sample_timing.sample_clock(self.start_tick);
+        let mut sample_clock = sample_timing.sample_clock();
 
         let value = if sample_clock < self.attack {
             sample_clock / self.attack

@@ -8,6 +8,7 @@ pub struct BasicSynthesizer<G: Generator> {
     pub base_generator: G,
     pub adsr: AdsrGenerator,
     pub volume: f32,
+    pub start_tick: usize,
     new_note: bool,
     pub muted: bool,
 }
@@ -18,6 +19,7 @@ impl<G: Generator> BasicSynthesizer<G> {
             base_generator,
             adsr,
             volume,
+            start_tick: 0,
             new_note: false,
             muted: true,
         }
@@ -32,10 +34,12 @@ impl<G: Generator> BasicSynthesizer<G> {
 impl<G: Generator> Patch for BasicSynthesizer<G> {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
         if self.new_note {
+            self.start_tick = sample_timing.clock;
             self.new_note = false;
-            self.adsr.start_tick = sample_timing.clock;
             self.muted = false;
         }
+
+        let sample_timing = sample_timing - self.start_tick;
 
         if self.muted {
             poly_sample!()
@@ -58,6 +62,7 @@ impl<G: Generator + Default> Default for BasicSynthesizer<G> {
             base_generator: G::default(),
             adsr: Default::default(),
             volume: 0.1,
+            start_tick: 0,
             new_note: false,
             muted: true,
         }

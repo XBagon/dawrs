@@ -30,7 +30,6 @@ impl Patch for MelodyPatch {
             if self.current_note_quarter_count == 0 {
                 //should play new tone
                 self.synth.base_generator.frequency = midi_id_to_frequency(note); //set frequency of synth to right note
-                self.synth.base_generator.start_tick = clock; //reset base_generator
                 self.synth.play(quarter_duration * note_length as f32 - 0.2); //play note for duration
             }
             self.current_note_quarter_count += 1; //increase amount of quarter notes current note is playing

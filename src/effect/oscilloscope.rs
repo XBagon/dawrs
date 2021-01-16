@@ -77,7 +77,7 @@ impl Effect for Oscilloscope {
             if self.buffer.len() == buffer_size {
                 self.buffer.pop_front();
             }
-            self.buffer.push_back((sample_timing.sample_clock(0), poly_sample.clone()));
+            self.buffer.push_back((sample_timing.sample_clock(), poly_sample.clone()));
         }
         self.last_sample_counter += 1;
         poly_sample

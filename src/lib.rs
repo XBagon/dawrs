@@ -139,7 +139,6 @@ mod tests {
                     }
                     if self.current_note_quarter_count == 0 {
                         let note_length = self.note_lengths[self.melody_index];
-                        self.synth.base_generator.start_tick = clock;
                         let note_length = note_length as f32;
                         self.synth.play(quarter_duration * note_length as f32 - 0.2);
                     }
