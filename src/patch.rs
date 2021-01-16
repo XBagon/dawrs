@@ -35,7 +35,7 @@ impl Patch for MasterPatch {
         let mut master = poly_sample!();
         for patch in &mut self.patches {
             let patch_samples = patch.next_sample(&sample_timing).0;
-            if patch_samples.len() == 0 {
+            if patch_samples.is_empty() {
                 return poly_sample!();
             }
             for (i, sample) in patch_samples.into_iter().enumerate() {
@@ -63,7 +63,7 @@ impl OutPatch for MasterPatch {
         for frame in output.chunks_mut(channels) {
             let next_samples = self.next_sample(sample_timing).0;
 
-            if next_samples.len() == 0 {
+            if next_samples.is_empty() {
                 return Some(CpalEvent::Exit);
             }
 

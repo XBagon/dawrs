@@ -71,7 +71,7 @@ impl<P: OutPatch> Cpal<P> {
 
         let mut result = Ok(());
 
-        Ok(take_mut::take(patch, |patch| {
+        take_mut::take(patch, |patch| {
             let mut cpal_patch = CpalPatch {
                 patch: ManuallyDrop::new(patch),
                 return_sender,
@@ -106,6 +106,7 @@ impl<P: OutPatch> Cpal<P> {
                 result = Err(err);
                 return_receiver.recv().unwrap()
             })
-        }))
+        });
+        Ok(())
     }
 }
