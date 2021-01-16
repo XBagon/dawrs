@@ -23,7 +23,7 @@ impl Patch for MelodyPatch {
         let clock = sample_timing.clock;
 
         if clock % quarter_sample_count == 0 {
-            //at the start of quarter note
+            //every quarter note
             //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;
             let note = self.melody[self.melody_index];
             let note_length = self.note_lengths[self.melody_index];
@@ -44,8 +44,8 @@ impl Patch for MelodyPatch {
             }
         }
 
-        let mut poly_sample = self.synth.next_sample(&sample_timing); //generate sample from synthesizer
-        poly_sample = self.delay.process(&sample_timing, poly_sample); //process delay effect
+        let mut poly_sample = self.synth.next_sample(&sample_timing);
+        poly_sample = self.delay.process(&sample_timing, poly_sample);
         poly_sample.polify(2); //make stereo
 
         poly_sample
@@ -57,9 +57,9 @@ fn midi_id_to_frequency(midi_id: u8) -> f32 {
 }
 
 fn main() {
-    let mut cpal = Cpal::new().unwrap();
+    let mut cpal = Cpal::new().unwrap(); //manages playback
 
-    let mut master_patch = MasterPatch::default();
+    let mut master_patch = MasterPatch::default(); //patch that easily combines multiple patches and can be "played"
 
     let patch = MelodyPatch {
         synth: BasicSynthesizer::new(
