@@ -1,5 +1,5 @@
 use dawrs::{
-    effect::Delay,
+    effect::{Delay, Oscilloscope},
     generator::{AdsrGenerator, TriangleGenerator},
     prelude::*,
     synthesizer::BasicSynthesizer,
@@ -13,32 +13,37 @@ struct MelodyPatch {
     note_lengths: Vec<u8>,          //list of note lengths
     melody_index: usize,            //tracks which note is playing
     current_note_quarter_count: u8, //duration of current note
+    oscilloscope: Oscilloscope,
 }
 
 impl Patch for MelodyPatch {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
         let quarter_duration = 0.4; //quarter notes of 0.4 seconds
-        let quarter_sample_count = sample_timing.duration_to_sample_count(quarter_duration);
 
-        let clock = sample_timing.clock;
-
-        if clock % quarter_sample_count == 0 {
-            //every quarter note
-            //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;
-            let note = self.melody[self.melody_index];
-            let note_length = self.note_lengths[self.melody_index];
-            if self.current_note_quarter_count == 0 {
-                //should play new tone
-                self.synth.base_generator.frequency = midi_id_to_frequency(note); //set frequency of synth to right note
-                self.synth.play(quarter_duration * note_length as f32 - 0.2); //play note for duration
-            }
-            self.current_note_quarter_count += 1; //increase amount of quarter notes current note is playing
-            if note_length == self.current_note_quarter_count {
-                //end of current note reached
-                self.current_note_quarter_count = 0;
-                self.melody_index += 1;
-                if self.melody_index == self.melody.len() {
-                    //end of song reached
+        if sample_timing.every_time_interval(quarter_duration) {
+            if self.melody_index < self.melody.len() {
+                //every quarter note
+                //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;
+                let note = self.melody[self.melody_index];
+                let note_length = self.note_lengths[self.melody_index];
+                if self.current_note_quarter_count == 0 {
+                    //should play new tone
+                    self.synth.base_generator.frequency = midi_id_to_frequency(note); //set frequency of synth to right note
+                    self.synth.play(quarter_duration * note_length as f32 - 0.5 * quarter_duration);
+                    //play note for duration
+                }
+                self.current_note_quarter_count += 1; //increase amount of quarter notes current note is playing
+                if note_length == self.current_note_quarter_count {
+                    //end of current note reached
+                    self.current_note_quarter_count = 0;
+                    self.melody_index += 1;
+                }
+            } else {
+                //after end of last note
+                self.current_note_quarter_count += 1;
+                //wait time for last note die out
+                if self.current_note_quarter_count == 6 {
+                    //self.oscilloscope.plot("oscilloscope_output/marry_had_a_little_lamb.png").unwrap(); //uncomment to plot song
                     return poly_sample!(); //return empty sample to stop program
                 }
             }
@@ -46,6 +51,7 @@ impl Patch for MelodyPatch {
 
         let mut poly_sample = self.synth.next_sample(&sample_timing);
         poly_sample = self.delay.process(&sample_timing, poly_sample);
+        poly_sample = self.oscilloscope.process(&sample_timing, poly_sample);
         poly_sample.polify(2); //make stereo
 
         poly_sample
@@ -73,8 +79,9 @@ fn main() {
             74, 76, 74, 72,
         ],
         note_lengths: vec![
-            1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
+            1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
         ],
+        oscilloscope: Oscilloscope::new(14.0, 0.001, 0, 512, 1.0),
         ..MelodyPatch::default()
     };
 
