@@ -5,10 +5,10 @@ use std::collections::VecDeque;
 
 #[derive(Clone, Default)]
 pub struct Lag {
-    start_chance: f32,
-    stop_chance: f32,
-    buffer_length: f32,
-    buffer_length_rand_bias: f32,
+    pub start_chance: f32,
+    pub stop_chance: f32,
+    pub buffer_length: f32,
+    pub buffer_length_rand_bias: f32,
     active_indexed_buffer: Option<(usize, Vec<PolySample>)>,
     buffer: VecDeque<PolySample>,
 }

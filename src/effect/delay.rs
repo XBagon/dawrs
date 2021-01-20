@@ -4,8 +4,8 @@ use std::collections::VecDeque;
 
 #[derive(Clone, Default)]
 pub struct Delay {
-    delay: f32,
-    feedback: f32,
+    pub delay: f32,
+    pub feedback: f32,
     buffer: VecDeque<PolySample>,
 }
 

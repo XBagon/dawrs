@@ -6,12 +6,12 @@ use std::{collections::VecDeque, path::Path};
 
 #[derive(Clone)]
 pub struct Oscilloscope {
-    sample_interval: f32,
-    buffer_duration: f32,
+    pub sample_interval: f32,
+    pub buffer_duration: f32,
     last_sample_counter: usize,
-    channel: u8,
-    height: u32,
-    aspect_ratio: f32,
+    pub channel: u8,
+    pub height: u32,
+    pub aspect_ratio: f32,
     buffer: VecDeque<(f32, PolySample)>,
 }
 
@@ -21,7 +21,7 @@ impl Oscilloscope {
         sample_interval: f32,
         channel: u8,
         height: u32,
-        ratio: f32,
+        aspect_ratio: f32,
     ) -> Self {
         Self {
             sample_interval,
@@ -29,7 +29,7 @@ impl Oscilloscope {
             last_sample_counter: 0,
             channel,
             height,
-            aspect_ratio: ratio,
+            aspect_ratio,
             buffer: VecDeque::new(),
         }
     }
