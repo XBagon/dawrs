@@ -68,6 +68,12 @@ impl Oscilloscope {
     }
 }
 
+impl Default for Oscilloscope {
+    fn default() -> Self {
+        Self::new(1.0, 0.001, 0, 512, 1.0)
+    }
+}
+
 impl Effect for Oscilloscope {
     fn process(&mut self, sample_timing: &SampleTiming, poly_sample: PolySample) -> PolySample {
         let buffer_size = sample_timing.duration_to_sample_count(self.buffer_duration);
