@@ -23,10 +23,9 @@ impl Effect for Delay {
     fn process(&mut self, sample_timing: &SampleTiming, mut poly_sample: PolySample) -> PolySample {
         let buffer_size = sample_timing.duration_to_sample_count(self.delay);
         if self.buffer.len() == buffer_size {
-            poly_sample += &self.buffer[0] * self.feedback;
-            self.buffer.pop_front();
+            poly_sample += self.buffer.pop_front().unwrap();
         }
-        self.buffer.push_back(poly_sample.clone());
+        self.buffer.push_back(poly_sample.clone() * self.feedback);
         poly_sample
     }
 }
