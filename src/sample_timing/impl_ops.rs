@@ -1,5 +1,5 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign};
 use super::SampleTiming;
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 //ops for SampleTiming
 

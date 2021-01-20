@@ -42,4 +42,20 @@ impl SampleTiming {
     pub fn duration_to_sample_count(&self, duration: f32) -> usize {
         (duration * self.sample_rate) as usize
     }
+
+    pub fn every_time_interval(&self, time: f32) -> bool {
+        self.clock % self.duration_to_sample_count(time) == 0
+    }
+
+    pub fn is_time(&self, time: f32) -> bool {
+        self.clock == self.duration_to_sample_count(time)
+    }
+
+    pub fn is_after_time(&self, time: f32) -> bool {
+        self.clock >= self.duration_to_sample_count(time)
+    }
+
+    pub fn is_before_time(&self, time: f32) -> bool {
+        self.clock < self.duration_to_sample_count(time)
+    }
 }
