@@ -16,6 +16,7 @@ pub struct PolySample(pub tinyvec::ArrayVec<[f32; 2]>);
 #[shrinkwrap(mutable)]
 pub struct PolySample(pub tinyvec::TinyVec<[f32; 2]>);
 
+/// Usage: poly_sample!([sample*])
 #[cfg(feature = "unlimited")]
 #[macro_export]
 macro_rules! poly_sample {
@@ -26,6 +27,7 @@ macro_rules! poly_sample {
     () => (PolySample(tinyvec::tiny_vec![]));
 }
 
+/// Usage: poly_sample!([sample*])
 #[cfg(not(feature = "unlimited"))]
 #[macro_export]
 macro_rules! poly_sample {

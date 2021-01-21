@@ -77,7 +77,7 @@
 //!         if sample_timing.is_time(0.0) { //initially
 //!             self.sine_synth.play(1.0); //play for 1 second
 //!         } else if sample_timing.is_time(1.05) { //finished note plus its release
-//!             return poly_sample![] //returning an empty PolySample stops the patch
+//!             return poly_sample!() //returning an empty PolySample stops the patch
 //!         }
 //!         let mut poly_sample = self.sine_synth.next_sample(sample_timing);
 //!         poly_sample.polify(2); //make stereo
