@@ -10,6 +10,9 @@ keywords = ["digital", "audio", "workstation", "daw", "music"]
 categories = ["multimedia::audio"]
 readme = "README.md"
 
+[badges]
+github = { repository = "XBagon/dawrs" }
+
 [dependencies]
 cpal = "0.13.1"
 anyhow = "1.0.35"

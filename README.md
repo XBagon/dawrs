@@ -1,3 +1,5 @@
+[![Workflow Status](https://github.com/XBagon/dawrs/workflows/main/badge.svg)](https://github.com/XBagon/dawrs/actions?query=workflow%3A%22main%22)
+
 # DAWrs */doors/*
 
 DAW-like music/sound production library.
