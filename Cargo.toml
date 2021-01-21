@@ -1,10 +1,14 @@
 [package]
 name = "dawrs"
 version = "0.1.0"
-authors = ["XBagon"]
+authors = ["XBagon <xbagon@outlook.de>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "DAW-like music/sound production library."
+repository = "https://github.com/XBagon/dawrs"
+license = "MIT"
+keywords = ["digital", "audio", "workstation", "daw", "music"]
+categories = ["multimedia::audio"]
+readme = "README.md"
 
 [dependencies]
 cpal = "0.13.1"
