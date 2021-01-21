@@ -20,7 +20,7 @@ impl Patch for MelodyPatch {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
         let quarter_duration = 0.4; //quarter notes of 0.4 seconds
 
-        if sample_timing.every_time_interval(quarter_duration) {
+        if sample_timing.is_after_interval(quarter_duration) {
             if self.melody_index < self.melody.len() {
                 //every quarter note
                 //let quarter_count = (clock % (quarter_length * self.melody.len())) / quarter_length;

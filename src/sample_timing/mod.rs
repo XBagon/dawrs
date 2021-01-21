@@ -1,6 +1,6 @@
 mod impl_ops;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct SampleTiming {
     pub sample_rate: f32,
     pub clock: usize,
@@ -43,7 +43,7 @@ impl SampleTiming {
         (duration * self.sample_rate) as usize
     }
 
-    pub fn every_time_interval(&self, time: f32) -> bool {
+    pub fn is_after_interval(&self, time: f32) -> bool {
         self.clock % self.duration_to_sample_count(time) == 0
     }
 

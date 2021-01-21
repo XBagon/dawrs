@@ -2,17 +2,17 @@ use shrinkwraprs::Shrinkwrap;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Range};
 
 #[cfg(feature = "mono")]
-#[derive(Clone, Shrinkwrap)]
+#[derive(Clone, Debug, Shrinkwrap)]
 #[shrinkwrap(mutable)]
 pub struct PolySample(pub tinyvec::ArrayVec<[f32; 1]>);
 
 #[cfg(feature = "stereo")]
-#[derive(Clone, Shrinkwrap)]
+#[derive(Clone, Debug, Shrinkwrap)]
 #[shrinkwrap(mutable)]
 pub struct PolySample(pub tinyvec::ArrayVec<[f32; 2]>);
 
 #[cfg(feature = "unlimited")]
-#[derive(Clone, Shrinkwrap)]
+#[derive(Clone, Debug, Shrinkwrap)]
 #[shrinkwrap(mutable)]
 pub struct PolySample(pub tinyvec::TinyVec<[f32; 2]>);
 
