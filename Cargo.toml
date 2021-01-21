@@ -16,6 +16,7 @@ rand = "0.7.3"
 tinyvec = "1.1.0"
 crossbeam-channel = "0.5.0"
 take_mut = "0.2.2"
+approx = "0.4.0"
 
 [features]
 default = ["stereo"]
