@@ -50,6 +50,7 @@
 //!     * Tunings
 //!
 //! ### Dream Features (time intensive and low priority ideas)
+//! * Scripting (Custom language or existing one with simple interface to this library)
 //! * UI
 //!     * Node-Editor UI to connect components and their parameters visually
 //!     * Sequencer
@@ -58,7 +59,47 @@
 //! * Release an executable procedural album (Not really a feature, but my dream and big inspiration behind this)
 //!
 //! ## Get Started
-//! **Look at the [examples](https://github.com/XBagon/dawrs/tree/master/examples)!**
+//!
+//! ```
+//! use dawrs::{
+//!     generator::{SineGenerator, AdsrGenerator},
+//!     prelude::*,
+//!     synthesizer::BasicSynthesizer,
+//! };
+//!
+//! #[derive(Default)]
+//! struct IntroPatch {
+//!     sine_synth: BasicSynthesizer<SineGenerator>
+//! }
+//!
+//! impl Patch for IntroPatch {
+//!     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
+//!         if sample_timing.is_time(0.0) { //initially
+//!             self.sine_synth.play(1.0); //play for 1 second
+//!         } else if sample_timing.is_time(1.05) { //finished note plus its release
+//!             return poly_sample![] //returning an empty PolySample stops the patch
+//!         }
+//!         let mut poly_sample = self.sine_synth.next_sample(sample_timing);
+//!         poly_sample.polify(2); //make stereo
+//!         poly_sample
+//!     }
+//! }
+//!
+//! fn main() {
+//! let mut cpal = Cpal::new().unwrap(); //manages playback, uses default playback device. If you need more options, you have to construct it yourself at the moment.
+//!
+//!     let mut master_patch = MasterPatch::default(); //patch that easily combines multiple patches and can be "played"
+//!     let patch = IntroPatch {
+//!         sine_synth: BasicSynthesizer::new(
+//!             SineGenerator::new(261.626), //set frequency to Middle C
+//!             AdsrGenerator::new(0.2, 0.0, 1.0, 0.1, 0.05), 0.1) //configure ADSR so there's no clicking sound
+//!     };
+//!     master_patch.add_patch(patch);
+//!     cpal.play_patch(&mut master_patch);
+//! }
+//! ```
+//!
+//! **Look at further [examples](https://github.com/XBagon/dawrs/tree/master/examples)!**
 
 mod cpal;
 pub mod effect;
