@@ -20,6 +20,10 @@ impl AdsrGenerator {
             release,
         }
     }
+
+    pub fn total_duration(&self) -> f32 {
+        self.attack + self.decay + self.sustain + self.release
+    }
 }
 
 impl Default for AdsrGenerator {

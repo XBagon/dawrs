@@ -94,11 +94,12 @@ impl<P: OutPatch> Cpal<P> {
                 loop {
                     match event_receiver.recv().unwrap() {
                         CpalEvent::Exit => {
+                            stream.pause().unwrap();
                             drop(stream);
                             return Ok(return_receiver.recv().unwrap());
                         }
-                        CpalEvent::Pause => {}
-                        CpalEvent::Resume => {}
+                        CpalEvent::Pause => {todo!()}
+                        CpalEvent::Resume => {todo!()}
                     }
                 }
             })()
