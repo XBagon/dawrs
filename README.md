@@ -82,7 +82,6 @@ impl Patch for IntroPatch {
             //initially
             self.sine_synth.play(1.0); //play for 1 second of sustain
         } else if sample_timing.is_time(self.sine_synth.adsr.total_duration()*1.05) {
-            eprintln!("{:?}", self.sine_synth.next_sample(sample_timing));
             //finished note
             return poly_sample!(); //returning an empty PolySample stops the patch
         }
