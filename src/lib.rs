@@ -329,7 +329,8 @@ mod tests {
                 let mut adsr = self.adsr_gen.generate(&sample_timing);
                 adsr = self.adsr_oscope.process(&sample_timing, adsr);
 
-                let sample_count = sample_timing.duration_to_sample_count(self.adsr_gen.total_duration());
+                let sample_count =
+                    sample_timing.duration_to_sample_count(self.adsr_gen.total_duration() * 1.05);
 
                 if sample_timing.clock == sample_count - 1 {
                     self.adsr_oscope.plot("oscilloscope_output/adsr.png").unwrap();

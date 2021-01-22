@@ -4,7 +4,7 @@ use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
     Device, Host, StreamConfig, SupportedStreamConfig,
 };
-use std::{marker::PhantomData, mem::ManuallyDrop, ptr};
+use std::{marker::PhantomData, mem::ManuallyDrop, ptr, thread::sleep, time::Duration};
 
 pub struct Cpal<P: OutPatch + 'static> {
     pub host: Host,
@@ -94,12 +94,17 @@ impl<P: OutPatch> Cpal<P> {
                 loop {
                     match event_receiver.recv().unwrap() {
                         CpalEvent::Exit => {
+                            sleep(Duration::from_millis(50));
                             stream.pause().unwrap();
                             drop(stream);
                             return Ok(return_receiver.recv().unwrap());
                         }
-                        CpalEvent::Pause => {todo!()}
-                        CpalEvent::Resume => {todo!()}
+                        CpalEvent::Pause => {
+                            todo!()
+                        }
+                        CpalEvent::Resume => {
+                            todo!()
+                        }
                     }
                 }
             })()
