@@ -66,22 +66,25 @@ DAW-like music/sound production library.
 
 ```rust
 use dawrs::{
-    generator::{SineGenerator, AdsrGenerator},
+    generator::{AdsrGenerator, SineGenerator},
     prelude::*,
     synthesizer::BasicSynthesizer,
 };
 
 #[derive(Default)]
 struct IntroPatch {
-    sine_synth: BasicSynthesizer<SineGenerator>
+    sine_synth: BasicSynthesizer<SineGenerator>,
 }
 
 impl Patch for IntroPatch {
     fn next_sample(&mut self, sample_timing: &SampleTiming) -> PolySample {
-        if sample_timing.is_time(0.0) { //initially
-            self.sine_synth.play(1.0); //play for 1 second
-        } else if sample_timing.is_time(1.05) { //finished note plus its release
-            return poly_sample!() //returning an empty PolySample stops the patch
+        if sample_timing.is_time(0.0) {
+            //initially
+            self.sine_synth.play(1.0); //play for 1 second of sustain
+        } else if sample_timing.is_time(self.sine_synth.adsr.total_duration()*1.05) {
+            eprintln!("{:?}", self.sine_synth.next_sample(sample_timing));
+            //finished note
+            return poly_sample!(); //returning an empty PolySample stops the patch
         }
         let mut poly_sample = self.sine_synth.next_sample(sample_timing);
         poly_sample.polify(2); //make stereo
@@ -90,13 +93,17 @@ impl Patch for IntroPatch {
 }
 
 fn main() {
-let mut cpal = Cpal::new().unwrap(); //manages playback, uses default playback device. If you need more options, you have to construct it yourself at the moment.
+    //manages playback, uses default playback device. If you need more options, you have to construct it yourself at the moment.
+    let mut cpal = Cpal::new().unwrap();
 
-    let mut master_patch = MasterPatch::default(); //patch that easily combines multiple patches and can be "played"
+    //patch that easily combines multiple patches and can be "played"
+    let mut master_patch = MasterPatch::default();
     let patch = IntroPatch {
         sine_synth: BasicSynthesizer::new(
             SineGenerator::new(261.626), //set frequency to Middle C
-            AdsrGenerator::new(0.2, 0.0, 1.0, 0.1, 0.05), 0.1) //configure ADSR so there's no clicking sound
+            AdsrGenerator::new(0.2, 0.0, 1.0, 0.1, 0.05), //configure ADSR so there's no clicking sound
+            0.1,
+        ),
     };
     master_patch.add_patch(patch);
     cpal.play_patch(&mut master_patch);
