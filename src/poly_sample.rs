@@ -21,7 +21,7 @@ pub struct PolySample(pub tinyvec::TinyVec<[f32; 2]>);
 #[macro_export]
 macro_rules! poly_sample {
     ([$e:expr; $n:expr]) => (PolySample(tinyvec::tiny_vec![$e; $n]));
-    ([$($e:expr)*]) => (PolySample(tinyvec::tiny_vec![$($e)*]));
+    ([$($e:expr),*]) => (PolySample(tinyvec::tiny_vec![_ => $($e),*]));
     ([$e:expr]) => (PolySample(tinyvec::tiny_vec![_ => $e]));
     ($e:expr) => (PolySample($e));
     () => (PolySample(tinyvec::tiny_vec![]));
@@ -32,7 +32,7 @@ macro_rules! poly_sample {
 #[macro_export]
 macro_rules! poly_sample {
     ([$e:expr; $n:expr]) => (PolySample(tinyvec::array_vec![$e; $n]));
-    ([$($e:expr)*]) => (PolySample(tinyvec::array_vec![$($e)*]));
+    ([$($e:expr),*]) => (PolySample(tinyvec::array_vec![_ => $($e),*]));
     ([$e:expr]) => (PolySample(tinyvec::array_vec![_ => $e]));
     ($e:expr) => (PolySample($e));
     () => (PolySample(tinyvec::array_vec![]));
