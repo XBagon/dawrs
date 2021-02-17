@@ -21,6 +21,7 @@ struct CpalPatch<P: OutPatch> {
 
 impl<P: OutPatch> Drop for CpalPatch<P> {
     fn drop(&mut self) {
+        println!("hello");
         let patch = unsafe { ManuallyDrop::into_inner(ptr::read(&self.patch)) };
         self.return_sender.send(patch).unwrap();
     }
@@ -37,7 +38,7 @@ impl<P: OutPatch> Cpal<P> {
         let host = cpal::default_host();
 
         let device = host.default_output_device().expect("failed to find a default output device");
-        let config = device.default_output_config()?;
+        let config = device.default_output_config()?; //TODO: fix buffer size
 
         Ok(Self {
             host,
@@ -95,8 +96,11 @@ impl<P: OutPatch> Cpal<P> {
                     match event_receiver.recv().unwrap() {
                         CpalEvent::Exit => {
                             sleep(Duration::from_millis(50));
+                            println!("hello");
                             stream.pause().unwrap();
+                            println!("hello");
                             drop(stream);
+                            println!("hello");
                             return Ok(return_receiver.recv().unwrap());
                         }
                         CpalEvent::Pause => {
