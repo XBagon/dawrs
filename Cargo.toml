@@ -24,6 +24,7 @@ tinyvec = "1.1.0"
 crossbeam-channel = "0.5.0"
 take_mut = "0.2.2"
 approx = "0.4.0"
+rustfft = "5.0.1"
 
 [features]
 default = ["stereo"]

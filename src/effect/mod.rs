@@ -1,6 +1,7 @@
 mod delay;
 mod lag;
 mod oscilloscope;
+mod filter;
 
 use crate::{PolySample, SampleTiming};
 pub use delay::Delay;
